@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/utils/validators.dart';
-import '../../../data/services/auth_service.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/utils/validators.dart';
+import '../../../../data/services/doctor_services/doctor_auth_service.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class DoctorLoginScreen extends StatefulWidget {
+  const DoctorLoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<DoctorLoginScreen> createState() => _DoctorLoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
+  final _authService = DoctorAuthService();
 
   bool _isLoading = false;
   bool _passwordVisible = false;
@@ -28,17 +28,19 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMessage = null;
     });
 
-    final admin = await _authService.login(
+    final doctor = await _authService.login(
       _emailController.text.trim(),
       _passwordController.text,
     );
 
     setState(() => _isLoading = false);
 
-    if (admin != null) {
-      if (mounted) context.go('/dashboard');
+    if (doctor != null) {
+      if (mounted) context.go('/doctor-schedule');
     } else {
-      setState(() => _errorMessage = 'Invalid email or password');
+      setState(
+        () => _errorMessage = 'Invalid credentials or account is inactive',
+      );
     }
   }
 
@@ -52,17 +54,16 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryDark,
+      backgroundColor: const Color(0xFF020d1a),
       body: Column(
         children: [
-          // Gradient header
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [AppColors.primary, AppColors.primaryDark],
+                colors: [AppColors.bluePrimary, AppColors.blueDark, Color(0xFF020d1a)],
               ),
             ),
             child: SafeArea(
@@ -70,34 +71,35 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Stack(
                 children: [
                   Positioned(
-                    top: -40,
-                    right: -40,
+                    top: -50,
+                    right: -50,
                     child: Container(
-                      width: 180,
-                      height: 180,
+                      width: 200,
+                      height: 200,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withValues(alpha: 0.04),
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: -20,
-                    left: -20,
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.03),
-                      ),
-                    ),
-                  ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
+                    padding: const EdgeInsets.fromLTRB(28, 16, 28, 40),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        GestureDetector(
+                          onTap: () => context.go('/'),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.arrow_back, color: Colors.white, size: 18),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
                         Container(
                           width: 56,
                           height: 56,
@@ -105,19 +107,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: Colors.white.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(18),
                           ),
-                          child: const Icon(
-                            Icons.local_hospital,
-                            color: Colors.white,
-                            size: 28,
-                          ),
+                          child: const Icon(Icons.medical_services_outlined, color: Colors.white, size: 28),
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          'Welcome to',
-                          style: TextStyle(
-                            color: Colors.white60,
-                            fontSize: 13,
-                          ),
+                          'Doctor Portal',
+                          style: TextStyle(color: Colors.white60, fontSize: 13),
                         ),
                         const Text(
                           AppStrings.appName,
@@ -130,21 +125,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Text(
-                            'Admin Portal',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            'Secure Doctor Access',
+                            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
                           ),
                         ),
                       ],
@@ -155,7 +143,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          // Form card
           Expanded(
             child: Container(
               width: double.infinity,
@@ -181,21 +168,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Sign in',
+                        'Welcome back',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
-                          letterSpacing: -0.3,
                         ),
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Enter your credentials to continue',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
+                        'Sign in to your doctor account',
+                        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
                       ),
                       const SizedBox(height: 28),
 
@@ -207,9 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.redLight,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: AppColors.redMid.withValues(alpha: 0.3),
-                            ),
+                            border: Border.all(color: AppColors.redMid.withValues(alpha: 0.3)),
                           ),
                           child: Text(
                             _errorMessage!,
@@ -233,12 +214,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         keyboardType: TextInputType.emailAddress,
                         validator: Validators.validateEmail,
                         decoration: const InputDecoration(
-                          hintText: 'admin@medichain.com',
-                          prefixIcon: Icon(
-                            Icons.email_outlined,
-                            size: 18,
-                            color: AppColors.textTertiary,
-                          ),
+                          hintText: 'doctor@medichain.com',
+                          prefixIcon: Icon(Icons.email_outlined, size: 18, color: AppColors.textTertiary),
                         ),
                       ),
 
@@ -260,11 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         validator: Validators.validatePassword,
                         decoration: InputDecoration(
                           hintText: '••••••••',
-                          prefixIcon: const Icon(
-                            Icons.lock_outline,
-                            size: 18,
-                            color: AppColors.textTertiary,
-                          ),
+                          prefixIcon: const Icon(Icons.lock_outline, size: 18, color: AppColors.textTertiary),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _passwordVisible
@@ -287,8 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _handleLogin,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryMid,
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.blueMid,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -298,10 +270,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ? const SizedBox(
                                   height: 20,
                                   width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                 )
                               : const Text('Sign In →'),
                         ),
@@ -311,21 +280,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       Center(
                         child: GestureDetector(
-                          onTap: () => context.go('/doctor-login'),
-                          child: RichText(
-                            text: const TextSpan(
+                          onTap: () => context.go('/login'),
+                          child:  RichText(
+                            text: TextSpan(
                               children: [
                                 TextSpan(
-                                  text: 'Doctor? ',
-                                  style: TextStyle(
-                                    color: AppColors.textTertiary,
-                                    fontSize: 13,
-                                  ),
+                                  text: 'Admin? ',
+                                  style: TextStyle(color: AppColors.textTertiary, fontSize: 13),
                                 ),
                                 TextSpan(
                                   text: 'Login here',
                                   style: TextStyle(
-                                    color: AppColors.primaryMid,
+                                    color: AppColors.blueMid,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                   ),

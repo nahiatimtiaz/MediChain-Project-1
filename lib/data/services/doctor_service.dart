@@ -2,7 +2,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/doctor_model.dart';
 
 class DoctorService {
-  // Supabase client instance
   final _supabase = Supabase.instance.client;
 
   // Get all doctors from database
@@ -11,42 +10,62 @@ class DoctorService {
       final response = await _supabase
           .from('doctors')
           .select()
-          .order('created_at', ascending: false);
+          .order('full_name', ascending: true);
 
       return (response as List)
           .map((json) => DoctorModel.fromJson(json))
           .toList();
     } catch (e) {
+      print('GET ALL DOCTORS ERROR: $e');
       return [];
     }
   }
 
-  // Add new doctor
+  // Add new doctor with fixed sequential insert and email mapping
   Future<bool> addDoctor(DoctorModel doctor, String password) async {
     try {
-      // Create doctor auth account in Supabase
-      final authResponse = await _supabase.auth.admin.createUser(
-        AdminUserAttributes(
-          email: doctor.email,
-          password: password,
-          emailConfirm: true,
-        ),
+      print('Adding doctor: ${doctor.email}');
+
+      // 1. Sign up the user inside Supabase Auth
+      final AuthResponse authResponse = await _supabase.auth.signUp(
+        email: doctor.email,
+        password: password,
       );
 
-      if (authResponse.user == null) return false;
+      final String? authUserId = authResponse.user?.id;
 
-      // Save doctor data in doctors table
-      await _supabase.from('doctors').insert(doctor.toJson());
+      if (authUserId != null) {
+        // 2. Log action to audit_logs table
+        await _logAction(
+          'ADD_DOCTOR',
+          doctor.email,
+          'Added new doctor: ${doctor.fullName}',
+        );
 
-      // Log this action in audit_logs
-      await _logAction(
-        'ADD_DOCTOR',
-        doctor.email,
-        'Added new doctor: ${doctor.fullName}',
-      );
+        // 3. Insert directly into public.doctors table including the missing email column
+        await _supabase.from('doctors').insert({
+          'id': authUserId,
+          'doctor_id': doctor.doctorId,
+          'full_name': doctor.fullName,
+          'email': doctor
+              .email, // Fixed: Added missing email mapping to satisfy not-null constraint
+          'department': doctor.department,
+          'qualifications': doctor.qualifications,
+          'phone': doctor.phone,
+          'consultation_fee': doctor.consultationFee,
+          'slot_duration': doctor.slotDuration,
+          'available_days': doctor.availableDays,
+          'profile_image_url': doctor.profileImageUrl,
+          'account_status': doctor.accountStatus,
+        });
 
-      return true;
+        print('Doctor added successfully to doctors table');
+        return true;
+      }
+
+      return false;
     } catch (e) {
+      print('ADD DOCTOR ERROR: $e');
       return false;
     }
   }
@@ -56,10 +75,18 @@ class DoctorService {
     try {
       await _supabase
           .from('doctors')
-          .update(doctor.toJson())
+          .update({
+            'full_name': doctor.fullName,
+            'phone': doctor.phone,
+            'qualifications': doctor.qualifications,
+            'consultation_fee': doctor.consultationFee,
+            'department': doctor.department,
+            'slot_duration': doctor.slotDuration,
+            'available_days': doctor.availableDays,
+            'profile_image_url': doctor.profileImageUrl,
+          })
           .eq('id', doctorId);
 
-      // Log this action
       await _logAction(
         'UPDATE_DOCTOR',
         doctor.doctorId ?? '',
@@ -68,6 +95,7 @@ class DoctorService {
 
       return true;
     } catch (e) {
+      print('UPDATE DOCTOR ERROR: $e');
       return false;
     }
   }
@@ -75,17 +103,16 @@ class DoctorService {
   // Delete doctor
   Future<bool> deleteDoctor(String doctorId, String doctorName) async {
     try {
-      await _supabase.from('doctors').delete().eq('id', doctorId);
-
-      // Log this action
       await _logAction(
         'DELETE_DOCTOR',
         doctorId,
         'Deleted doctor: $doctorName',
       );
 
+      await _supabase.from('doctors').delete().eq('id', doctorId);
       return true;
     } catch (e) {
+      print('DELETE DOCTOR ERROR: $e');
       return false;
     }
   }
@@ -100,11 +127,12 @@ class DoctorService {
 
       return true;
     } catch (e) {
+      print('TOGGLE STATUS ERROR: $e');
       return false;
     }
   }
 
-  // Reset doctor password
+  // Reset doctor password using RPC
   Future<bool> resetDoctorPassword(String email, String newPassword) async {
     try {
       await _supabase.rpc(
@@ -112,16 +140,16 @@ class DoctorService {
         params: {'doctor_email': email, 'new_password': newPassword},
       );
 
-      // Log this action
       await _logAction('RESET_PASSWORD', email, 'Password reset for: $email');
 
       return true;
     } catch (e) {
+      print('RESET PASSWORD ERROR: $e');
       return false;
     }
   }
 
-  // Search doctors by name, department or doctor ID
+  // Search doctors
   Future<List<DoctorModel>> searchDoctors(String query) async {
     try {
       final response = await _supabase
@@ -135,11 +163,12 @@ class DoctorService {
           .map((json) => DoctorModel.fromJson(json))
           .toList();
     } catch (e) {
+      print('SEARCH DOCTORS ERROR: $e');
       return [];
     }
   }
 
-  // Filter doctors by department
+  // Filter by department
   Future<List<DoctorModel>> filterByDepartment(String department) async {
     try {
       final response = await _supabase
@@ -151,18 +180,20 @@ class DoctorService {
           .map((json) => DoctorModel.fromJson(json))
           .toList();
     } catch (e) {
+      print('FILTER BY DEPARTMENT ERROR: $e');
       return [];
     }
   }
 
-  // Save action to audit_logs table
+  // Save action to audit_logs
   Future<void> _logAction(
     String actionType,
     String targetId,
     String description,
   ) async {
     try {
-      final adminId = Supabase.instance.client.auth.currentUser?.id;
+      final adminId = _supabase.auth.currentUser?.id;
+
       await _supabase.from('audit_logs').insert({
         'admin_id': adminId,
         'action_type': actionType,
@@ -170,7 +201,7 @@ class DoctorService {
         'description': description,
       });
     } catch (e) {
-      // Log error silently
+      print('LOG ACTION ERROR: $e');
     }
   }
 }

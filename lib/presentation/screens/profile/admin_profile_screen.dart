@@ -21,12 +21,10 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
   final _storageService = StorageService();
   final _supabase = Supabase.instance.client;
 
-  // Profile form
   final _profileFormKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _usernameController = TextEditingController();
 
-  // Password form
   final _passwordFormKey = GlobalKey<FormState>();
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
@@ -47,7 +45,6 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     _loadAdmin();
   }
 
-  // Load current admin data
   Future<void> _loadAdmin() async {
     final admin = await _authService.getCurrentAdmin();
     setState(() {
@@ -58,7 +55,6 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     });
   }
 
-  // Pick profile image
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(
@@ -72,12 +68,10 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     }
   }
 
-  // Save profile info
   Future<void> _saveProfile() async {
     if (!_profileFormKey.currentState!.validate()) return;
     setState(() => _isSavingProfile = true);
 
-    // Upload new image if selected
     String? imageUrl = _admin?.profileImageUrl;
     if (_selectedImage != null) {
       imageUrl = await _storageService.uploadAdminImage(
@@ -86,7 +80,6 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
       );
     }
 
-    // Update admin in database
     await _supabase
         .from('admins')
         .update({
@@ -106,7 +99,6 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     }
   }
 
-  // Change password
   Future<void> _changePassword() async {
     if (!_passwordFormKey.currentState!.validate()) return;
     setState(() => _isSavingPassword = true);
@@ -149,178 +141,90 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Row(
-        children: [
-          // Sidebar
-          _buildSidebar(),
-
-          // Main Content
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _buildMainContent(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Sidebar
-  Widget _buildSidebar() {
-    return Container(
-      width: 240,
-      color: AppColors.sidebarBg,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            child: const Row(
-              children: [
-                Icon(Icons.local_hospital, color: Colors.white, size: 28),
-                SizedBox(width: 8),
-                Text(
-                  'MediChain',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+      backgroundColor: AppColors.primaryDark,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(child: _buildHeader()),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 90),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 0),
+                        _buildProfileCard(),
+                        const SizedBox(height: 14),
+                        _buildPasswordCard(),
+                        const SizedBox(height: 14),
+                        _buildSignOutButton(),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-          const Divider(color: Colors.white24),
-          const SizedBox(height: 8),
-          _buildNavItem(Icons.dashboard, 'Dashboard', '/dashboard', false),
-          _buildNavItem(Icons.people, 'Doctors', '/doctors', false),
-          _buildNavItem(Icons.person, 'My Profile', '/profile', true),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextButton.icon(
-              onPressed: () async {
-                await _authService.logout();
-                if (mounted) context.go('/login');
-              },
-              icon: const Icon(Icons.logout, color: Colors.white70),
-              label: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-          ),
-        ],
-      ),
+      bottomNavigationBar: _buildBottomNav(context, 2),
     );
   }
 
-  Widget _buildNavItem(
-    IconData icon,
-    String title,
-    String route,
-    bool isActive,
-  ) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isActive ? Colors.white : AppColors.sidebarText,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: isActive ? Colors.white : AppColors.sidebarText,
-          fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+  Widget _buildHeader() {
+    final initials = _admin?.fullName.split(' ')
+            .take(2)
+            .map((w) => w.isNotEmpty ? w[0].toUpperCase() : '')
+            .join() ??
+        'A';
+
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary, AppColors.primaryDark],
         ),
       ),
-      tileColor: isActive ? AppColors.sidebarActive : null,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      onTap: () => context.go(route),
-    );
-  }
-
-  // Main Content
-  Widget _buildMainContent() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Text(
-            'My Profile',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          child: Column(
             children: [
-              // Profile Info Card
-              Expanded(child: _buildProfileCard()),
-              const SizedBox(width: 24),
-              // Change Password Card
-              Expanded(child: _buildPasswordCard()),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Profile Info Card
-  Widget _buildProfileCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
-        ],
-      ),
-      child: Form(
-        key: _profileFormKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Profile Information',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Profile Image
-            Center(
-              child: GestureDetector(
+              GestureDetector(
                 onTap: _pickImage,
                 child: Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: _selectedImage != null
-                          ? FileImage(_selectedImage!)
-                          : (_admin?.profileImageUrl != null
-                                    ? NetworkImage(_admin!.profileImageUrl!)
-                                    : null)
-                                as ImageProvider?,
-                      child:
-                          (_selectedImage == null &&
-                              _admin?.profileImageUrl == null)
-                          ? Text(
-                              _admin?.fullName.substring(0, 1).toUpperCase() ??
-                                  'A',
-                              style: const TextStyle(
-                                fontSize: 32,
-                                color: Colors.white,
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 3,
+                        ),
+                        image: _selectedImage != null
+                            ? DecorationImage(
+                                image: FileImage(_selectedImage!),
+                                fit: BoxFit.cover,
+                              )
+                            : _admin?.profileImageUrl != null
+                                ? DecorationImage(
+                                    image: NetworkImage(_admin!.profileImageUrl!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                      ),
+                      child: (_selectedImage == null && _admin?.profileImageUrl == null)
+                          ? Center(
+                              child: Text(
+                                initials,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             )
                           : null,
@@ -329,224 +233,264 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                       bottom: 0,
                       right: 0,
                       child: Container(
-                        padding: const EdgeInsets.all(4),
+                        width: 22,
+                        height: 22,
                         decoration: BoxDecoration(
-                          color: AppColors.primary,
+                          color: AppColors.primaryMid,
                           shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
                         ),
-                        child: const Icon(
-                          Icons.camera_alt,
-                          color: Colors.white,
-                          size: 16,
-                        ),
+                        child: const Icon(Icons.camera_alt, size: 10, color: Colors.white),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Email (read only)
-            const Text('Email', style: TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.border),
+              const SizedBox(height: 12),
+              Text(
+                _admin?.fullName ?? 'Admin',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              child: Text(
-                _admin?.email ?? '',
-                style: TextStyle(color: AppColors.textSecondary),
+              const SizedBox(height: 4),
+              const Text(
+                'Super Administrator',
+                style: TextStyle(color: Colors.white60, fontSize: 13),
               ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Full Name
-            const Text(
-              'Full Name',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _nameController,
-              validator: Validators.validateName,
-              decoration: const InputDecoration(hintText: 'Your full name'),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Username
-            const Text(
-              'Username',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _usernameController,
-              validator: (value) =>
-                  Validators.validateRequired(value, 'Username'),
-              decoration: const InputDecoration(hintText: 'Your username'),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Save Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isSavingProfile ? null : _saveProfile,
-                child: _isSavingProfile
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text('Save Changes'),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // Change Password Card
+  Widget _buildProfileCard() {
+    return Transform.translate(
+      offset: const Offset(0, 0),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border, width: 1.5),
+        ),
+        child: Form(
+          key: _profileFormKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'EDIT PROFILE',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Full Name',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 6),
+              TextFormField(
+                controller: _nameController,
+                validator: Validators.validateName,
+                decoration: const InputDecoration(hintText: 'Your full name'),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Username',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 6),
+              TextFormField(
+                controller: _usernameController,
+                validator: (v) => Validators.validateRequired(v, 'Username'),
+                decoration: const InputDecoration(hintText: 'Your username'),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSavingProfile ? null : _saveProfile,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryMid,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: _isSavingProfile
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Save Changes'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildPasswordCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+    return Transform.translate(
+      offset: const Offset(0, 0),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border, width: 1.5),
+        ),
+        child: Form(
+          key: _passwordFormKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'CHANGE PASSWORD',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 14),
+              _buildPasswordField('Current Password', _currentPasswordController, _currentPassVisible, () {
+                setState(() => _currentPassVisible = !_currentPassVisible);
+              }),
+              const SizedBox(height: 12),
+              _buildPasswordField('New Password', _newPasswordController, _newPassVisible, () {
+                setState(() => _newPassVisible = !_newPassVisible);
+              }),
+              const SizedBox(height: 12),
+              _buildPasswordField('Confirm Password', _confirmPasswordController, _confirmPassVisible, () {
+                setState(() => _confirmPassVisible = !_confirmPassVisible);
+              }),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSavingPassword ? null : _changePassword,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryMid,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: _isSavingPassword
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Text('Update Password'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField(String label, TextEditingController controller, bool visible, VoidCallback toggle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          obscureText: !visible,
+          validator: (v) => Validators.validateRequired(v, label),
+          decoration: InputDecoration(
+            hintText: '••••••••',
+            prefixIcon: const Icon(Icons.lock_outline, size: 18, color: AppColors.textTertiary),
+            suffixIcon: IconButton(
+              icon: Icon(
+                visible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                size: 18,
+                color: AppColors.textTertiary,
+              ),
+              onPressed: toggle,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSignOutButton() {
+    return Transform.translate(
+      offset: const Offset(0, 0),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () async {
+            await _authService.logout();
+            if (mounted) context.go('/login');
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.redLight,
+            foregroundColor: AppColors.redText,
+            side: const BorderSide(color: AppColors.redLight, width: 2),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          child: const Text(
+            'Sign Out',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Widget _buildBottomNav(BuildContext context, int currentIndex) {
+  return Container(
+    decoration: const BoxDecoration(
+      color: Colors.white,
+      border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
+    ),
+    child: SafeArea(
+      top: false,
+      child: BottomNavigationBar(
+        currentIndex: currentIndex,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textTertiary,
+        selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+        unselectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+        onTap: (index) {
+          if (index == 0) context.go('/dashboard');
+          if (index == 1) context.go('/doctors');
+          if (index == 2) context.go('/profile');
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'Doctors'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), activeIcon: Icon(Icons.settings), label: 'Profile'),
         ],
       ),
-      child: Form(
-        key: _passwordFormKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Change Password',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Current Password
-            const Text(
-              'Current Password',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _currentPasswordController,
-              obscureText: !_currentPassVisible,
-              validator: (value) =>
-                  Validators.validateRequired(value, 'Current password'),
-              decoration: InputDecoration(
-                hintText: 'Enter current password',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _currentPassVisible
-                        ? Icons.visibility_off
-                        : Icons.visibility,
-                  ),
-                  onPressed: () => setState(
-                    () => _currentPassVisible = !_currentPassVisible,
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // New Password
-            const Text(
-              'New Password',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _newPasswordController,
-              obscureText: !_newPassVisible,
-              validator: Validators.validatePassword,
-              decoration: InputDecoration(
-                hintText: 'Enter new password',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _newPassVisible ? Icons.visibility_off : Icons.visibility,
-                  ),
-                  onPressed: () =>
-                      setState(() => _newPassVisible = !_newPassVisible),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Confirm Password
-            const Text(
-              'Confirm Password',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _confirmPasswordController,
-              obscureText: !_confirmPassVisible,
-              validator: (value) => Validators.validateConfirmPassword(
-                value,
-                _newPasswordController.text,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Confirm new password',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _confirmPassVisible
-                        ? Icons.visibility_off
-                        : Icons.visibility,
-                  ),
-                  onPressed: () => setState(
-                    () => _confirmPassVisible = !_confirmPassVisible,
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Change Password Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isSavingPassword ? null : _changePassword,
-                child: _isSavingPassword
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text('Change Password'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    ),
+  );
 }
