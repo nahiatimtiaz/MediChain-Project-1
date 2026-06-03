@@ -27,7 +27,6 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
     _loadDoctors();
   }
 
-  // Load all doctors
   Future<void> _loadDoctors() async {
     final doctors = await _doctorService.getAllDoctors();
     setState(() {
@@ -37,25 +36,21 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
     });
   }
 
-  // Search doctors by name or ID
   void _searchDoctors(String query) {
     setState(() {
       _filteredDoctors = _doctors.where((doctor) {
-        final matchesName = doctor.fullName.toLowerCase().contains(
-          query.toLowerCase(),
-        );
+        final matchesName =
+            doctor.fullName.toLowerCase().contains(query.toLowerCase());
         final matchesId =
             doctor.doctorId?.toLowerCase().contains(query.toLowerCase()) ??
-            false;
-        final matchesDept =
-            _selectedDepartment == 'All' ||
+                false;
+        final matchesDept = _selectedDepartment == 'All' ||
             doctor.department == _selectedDepartment;
         return (matchesName || matchesId) && matchesDept;
       }).toList();
     });
   }
 
-  // Filter by department
   void _filterByDepartment(String department) {
     setState(() {
       _selectedDepartment = department;
@@ -63,18 +58,20 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
     });
   }
 
-  // Toggle doctor active/inactive
   Future<void> _toggleStatus(DoctorModel doctor) async {
     await _doctorService.toggleDoctorStatus(doctor.id!, !doctor.accountStatus);
     _loadDoctors();
   }
 
-  // Delete doctor confirmation dialog
   Future<void> _confirmDelete(DoctorModel doctor) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Doctor'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Delete Doctor',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
         content: Text(
           'Are you sure you want to delete ${doctor.fullName}? This action cannot be undone.',
         ),
@@ -84,7 +81,12 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.redMid,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Delete'),
           ),
@@ -103,7 +105,6 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
     }
   }
 
-  // Show password reset dialog
   Future<void> _showPasswordResetDialog(DoctorModel doctor) async {
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -113,34 +114,29 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text('Reset Password - ${doctor.fullName}'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            'Reset Password\n${doctor.fullName}',
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
           content: Form(
             key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: passwordController,
-                  obscureText: !isVisible,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Password is required';
-                    }
-                    if (value.length < 8) return 'Minimum 8 characters';
-                    return null;
-                  },
-                  decoration: InputDecoration(
-                    labelText: 'New Password',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        isVisible ? Icons.visibility_off : Icons.visibility,
-                      ),
-                      onPressed: () =>
-                          setDialogState(() => isVisible = !isVisible),
-                    ),
-                  ),
+            child: TextFormField(
+              controller: passwordController,
+              obscureText: !isVisible,
+              validator: (value) {
+                if (value == null || value.isEmpty) return 'Password is required';
+                if (value.length < 8) return 'Minimum 8 characters';
+                return null;
+              },
+              decoration: InputDecoration(
+                labelText: 'New Password',
+                suffixIcon: IconButton(
+                  icon: Icon(isVisible ? Icons.visibility_off : Icons.visibility),
+                  onPressed: () =>
+                      setDialogState(() => isVisible = !isVisible),
                 ),
-              ],
+              ),
             ),
           ),
           actions: [
@@ -149,6 +145,12 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   await _doctorService.resetDoctorPassword(
@@ -158,9 +160,7 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
                   if (mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Password reset successfully'),
-                      ),
+                      const SnackBar(content: Text('Password reset successfully')),
                     );
                   }
                 }
@@ -173,356 +173,515 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
     );
   }
 
+  void _showDoctorActions(DoctorModel doctor) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: doctor.accountStatus
+                          ? AppColors.primaryLight
+                          : AppColors.redLight,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Center(
+                      child: Text(
+                        doctor.fullName.substring(0, 2).toUpperCase(),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                          color: doctor.accountStatus
+                              ? AppColors.primaryText
+                              : AppColors.redText,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          doctor.fullName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                        ),
+                        Text(
+                          doctor.department,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.blueLight,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.edit_outlined, color: AppColors.blueText, size: 18),
+              ),
+              title: const Text('Edit Doctor', style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () async {
+                Navigator.pop(context);
+                await context.push('/doctors/edit', extra: doctor);
+                _loadDoctors();
+              },
+            ),
+            ListTile(
+              leading: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.amberLight,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.key_outlined, color: AppColors.amberText, size: 18),
+              ),
+              title: const Text('Reset Password', style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () {
+                Navigator.pop(context);
+                _showPasswordResetDialog(doctor);
+              },
+            ),
+            ListTile(
+              leading: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: doctor.accountStatus
+                      ? AppColors.redLight
+                      : AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  doctor.accountStatus ? Icons.block_outlined : Icons.check_circle_outline,
+                  color: doctor.accountStatus
+                      ? AppColors.redText
+                      : AppColors.primaryText,
+                  size: 18,
+                ),
+              ),
+              title: Text(
+                doctor.accountStatus ? 'Deactivate' : 'Activate',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _toggleStatus(doctor);
+              },
+            ),
+            ListTile(
+              leading: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.redLight,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.delete_outline, color: AppColors.redText, size: 18),
+              ),
+              title: const Text('Delete Doctor', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.redText)),
+              onTap: () {
+                Navigator.pop(context);
+                _confirmDelete(doctor);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Row(
-        children: [
-          // Sidebar
-          _buildSidebar(),
-
-          // Main Content
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _buildMainContent(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Sidebar
-  Widget _buildSidebar() {
-    return Container(
-      width: 240,
-      color: AppColors.sidebarBg,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            child: const Row(
-              children: [
-                Icon(Icons.local_hospital, color: Colors.white, size: 28),
-                SizedBox(width: 8),
-                Text(
-                  'MediChain',
-                  style: TextStyle(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(child: _buildHeader()),
+                SliverToBoxAdapter(
+                  child: Container(
                     color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                    child: Column(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColors.borderMid, width: 1.5),
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: _searchDoctors,
+                            decoration: const InputDecoration(
+                              hintText: 'Search by name or ID...',
+                              prefixIcon: Icon(Icons.search, color: AppColors.textTertiary, size: 18),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(vertical: 12),
+                              fillColor: Colors.transparent,
+                              filled: true,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 36,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: ['All', ...AppStrings.departments]
+                                .map((dept) => Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: GestureDetector(
+                                        onTap: () => _filterByDepartment(dept),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: _selectedDepartment == dept
+                                                ? AppColors.primary
+                                                : AppColors.background,
+                                            borderRadius: BorderRadius.circular(20),
+                                            border: Border.all(
+                                              color: _selectedDepartment == dept
+                                                  ? AppColors.primary
+                                                  : AppColors.borderMid,
+                                              width: 1.5,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            dept,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: _selectedDepartment == dept
+                                                  ? Colors.white
+                                                  : AppColors.textSecondary,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ))
+                                .toList(),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
                   ),
                 ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                  sliver: SliverToBoxAdapter(
+                    child: Text(
+                      '${_filteredDoctors.length} doctors found',
+                      style: const TextStyle(
+                        color: AppColors.textTertiary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+                _filteredDoctors.isEmpty
+                    ? const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.all(40),
+                          child: Center(
+                            child: Text(
+                              'No doctors found',
+                              style: TextStyle(color: AppColors.textTertiary),
+                            ),
+                          ),
+                        ),
+                      )
+                    : SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 90),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) =>
+                                _buildDoctorCard(_filteredDoctors[index]),
+                            childCount: _filteredDoctors.length,
+                          ),
+                        ),
+                      ),
               ],
             ),
-          ),
-          const Divider(color: Colors.white24),
-          const SizedBox(height: 8),
-          _buildNavItem(Icons.dashboard, 'Dashboard', '/dashboard', false),
-          _buildNavItem(Icons.people, 'Doctors', '/doctors', true),
-          _buildNavItem(Icons.person, 'My Profile', '/profile', false),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextButton.icon(
-              onPressed: () async {
-                await AuthService().logout();
-                if (mounted) context.go('/login');
-              },
-              icon: const Icon(Icons.logout, color: Colors.white70),
-              label: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-          ),
-        ],
-      ),
+      bottomNavigationBar: _buildBottomNav(context, 1),
     );
   }
 
-  Widget _buildNavItem(
-    IconData icon,
-    String title,
-    String route,
-    bool isActive,
-  ) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isActive ? Colors.white : AppColors.sidebarText,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: isActive ? Colors.white : AppColors.sidebarText,
-          fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+  Widget _buildHeader() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary, AppColors.primaryDark],
         ),
       ),
-      tileColor: isActive ? AppColors.sidebarActive : null,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      onTap: () => context.go(route),
-    );
-  }
-
-  // Main Content
-  Widget _buildMainContent() {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
+                    'Manage',
+                    style: TextStyle(color: Colors.white60, fontSize: 12),
+                  ),
+                  const Text(
                     'Doctors',
                     style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
                     ),
-                  ),
-                  Text(
-                    '${_filteredDoctors.length} doctors found',
-                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ],
               ),
-              // Add Doctor Button
-              ElevatedButton.icon(
-                onPressed: () async {
+              GestureDetector(
+                onTap: () async {
                   await context.push('/doctors/add');
                   _loadDoctors();
                 },
-                icon: const Icon(Icons.add),
-                label: const Text('Add Doctor'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(140, 44),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Search and Filter Row
-          Row(
-            children: [
-              // Search Field
-              Expanded(
-                flex: 2,
-                child: TextFormField(
-                  controller: _searchController,
-                  onChanged: _searchDoctors,
-                  decoration: const InputDecoration(
-                    hintText: 'Search by name or doctor ID...',
-                    prefixIcon: Icon(Icons.search),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // Department Filter Dropdown
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: _selectedDepartment,
-                  decoration: const InputDecoration(labelText: 'Department'),
-                  items: ['All', ...AppStrings.departments]
-                      .map(
-                        (dept) =>
-                            DropdownMenuItem(value: dept, child: Text(dept)),
-                      )
-                      .toList(),
-                  onChanged: (value) => _filterByDepartment(value!),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Doctors Table
-          Expanded(
-            child: _filteredDoctors.isEmpty
-                ? Center(
-                    child: Text(
-                      'No doctors found',
-                      style: TextStyle(color: AppColors.textSecondary),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
                     ),
-                  )
-                : Container(
-                    decoration: BoxDecoration(
+                  ),
+                  child: const Text(
+                    '+ Add',
+                    style: TextStyle(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                    child: SingleChildScrollView(
-                      child: Table(
-                        columnWidths: const {
-                          0: FlexColumnWidth(1),
-                          1: FlexColumnWidth(2),
-                          2: FlexColumnWidth(1.5),
-                          3: FlexColumnWidth(1),
-                          4: FlexColumnWidth(1),
-                          5: FlexColumnWidth(2),
-                        },
-                        children: [
-                          // Table Header
-                          TableRow(
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.05),
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(12),
-                                topRight: Radius.circular(12),
-                              ),
-                            ),
-                            children: [
-                              _tableHeader('Doctor ID'),
-                              _tableHeader('Name'),
-                              _tableHeader('Department'),
-                              _tableHeader('Fee'),
-                              _tableHeader('Status'),
-                              _tableHeader('Actions'),
-                            ],
-                          ),
-
-                          // Table Rows
-                          ..._filteredDoctors.map(
-                            (doctor) => TableRow(
-                              decoration: const BoxDecoration(
-                                border: Border(
-                                  bottom: BorderSide(color: Color(0xFFEEEEEE)),
-                                ),
-                              ),
-                              children: [
-                                _tableCell(doctor.doctorId ?? '-'),
-                                // Doctor name with photo
-                                Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 16,
-                                        backgroundImage:
-                                            doctor.profileImageUrl != null
-                                            ? NetworkImage(
-                                                doctor.profileImageUrl!,
-                                              )
-                                            : null,
-                                        child: doctor.profileImageUrl == null
-                                            ? Text(
-                                                doctor.fullName.substring(0, 1),
-                                              )
-                                            : null,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          doctor.fullName,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                _tableCell(doctor.department),
-                                _tableCell(
-                                  '৳${doctor.consultationFee.toInt()}',
-                                ),
-                                // Status Toggle
-                                Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Switch(
-                                    value: doctor.accountStatus,
-                                    activeColor: AppColors.success,
-                                    onChanged: (_) => _toggleStatus(doctor),
-                                  ),
-                                ),
-                                // Action Buttons
-                                Padding(
-                                  padding: const EdgeInsets.all(8),
-                                  child: Row(
-                                    children: [
-                                      // Edit
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.edit,
-                                          color: AppColors.primary,
-                                          size: 20,
-                                        ),
-                                        onPressed: () async {
-                                          await context.push(
-                                            '/doctors/edit',
-                                            extra: doctor,
-                                          );
-                                          _loadDoctors();
-                                        },
-                                      ),
-                                      // Reset Password
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.lock_reset,
-                                          color: AppColors.warning,
-                                          size: 20,
-                                        ),
-                                        onPressed: () =>
-                                            _showPasswordResetDialog(doctor),
-                                      ),
-                                      // Delete
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.delete,
-                                          color: AppColors.error,
-                                          size: 20,
-                                        ),
-                                        onPressed: () => _confirmDelete(doctor),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
                     ),
                   ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-
-  // Table Header Cell
-  Widget _tableHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
         ),
       ),
     );
   }
 
-  // Table Data Cell
-  Widget _tableCell(String value) {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Text(value, style: TextStyle(color: AppColors.textPrimary)),
+  Widget _buildDoctorCard(DoctorModel doctor) {
+    final initials = doctor.fullName.split(' ')
+        .take(2)
+        .map((w) => w.isNotEmpty ? w[0].toUpperCase() : '')
+        .join();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: doctor.accountStatus
+                  ? AppColors.primaryLight
+                  : AppColors.redLight,
+              borderRadius: BorderRadius.circular(15),
+              image: doctor.profileImageUrl != null
+                  ? DecorationImage(
+                      image: NetworkImage(doctor.profileImageUrl!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: doctor.profileImageUrl == null
+                ? Center(
+                    child: Text(
+                      initials,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        color: doctor.accountStatus
+                            ? AppColors.primaryText
+                            : AppColors.redText,
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  doctor.fullName,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  doctor.department,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        doctor.doctorId ?? '-',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.primaryMid,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '৳${doctor.consultationFee.toInt()}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: doctor.accountStatus
+                            ? AppColors.primaryLight
+                            : AppColors.redLight,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        doctor.accountStatus ? 'Active' : 'Inactive',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: doctor.accountStatus
+                              ? AppColors.primaryText
+                              : AppColors.redText,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () => _showDoctorActions(doctor),
+            child: const Icon(Icons.more_horiz, color: Color(0xFFD1D5DB)),
+          ),
+        ],
+      ),
     );
   }
+}
+
+Widget _buildBottomNav(BuildContext context, int currentIndex) {
+  return Container(
+    decoration: const BoxDecoration(
+      color: Colors.white,
+      border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
+    ),
+    child: SafeArea(
+      top: false,
+      child: BottomNavigationBar(
+        currentIndex: currentIndex,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textTertiary,
+        selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+        unselectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+        onTap: (index) {
+          if (index == 0) context.go('/dashboard');
+          if (index == 1) context.go('/doctors');
+          if (index == 2) context.go('/profile');
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'Doctors'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), activeIcon: Icon(Icons.settings), label: 'Profile'),
+        ],
+      ),
+    ),
+  );
 }

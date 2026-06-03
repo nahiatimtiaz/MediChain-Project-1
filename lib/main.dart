@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:medichain/patient/home_page.dart';
-import 'package:medichain/patient/login_page.dart';
-import 'package:medichain/patient/patient_reg.dart';
+// import 'package:medichain/patient/home_page.dart';
+// import 'package:medichain/patient/login_page.dart';
+// import 'package:medichain/patient/patient_reg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/supabase_config.dart';
 import 'core/theme/app_theme.dart';
 import 'routes/app_router.dart';
-import 'package:medichain/choose/choice_page.dart';
-import 'package:medichain/patient/home_page.dart';
-import 'package:medichain/patient/doctor_search_page.dart';
+// import 'package:medichain/choose/choice_page.dart';
+// import 'package:medichain/patient/home_page.dart';
+// import 'package:medichain/patient/doctor_search_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,22 +26,27 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  // Widget build(BuildContext context) {
-  //   return MaterialApp.router(
-  //     title: 'Healthcare Admin',
-  //     debugShowCheckedModeBanner: false,
-  //     theme: AppTheme.lightTheme,
-  //     routerConfig: AppRouter.router,
-  //   );
-  // }
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      title: 'Healthcare Admin',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: ChoicePage(), 
-      //home: HomePage(),
-  
-
+      routerConfig: AppRouter.router,
     );
   }
+//   Widget build(BuildContext context) {
+// <<<<<<< HEAD
+//     return MaterialApp(
+// =======
+//     return MaterialApp.router(
+//       title: 'MediChain',
+// >>>>>>> 7c250126f776169990aee745affc3e552e434436
+//       debugShowCheckedModeBanner: false,
+//       theme: AppTheme.lightTheme,
+//       home: ChoicePage(), 
+//       //home: HomePage(),
+  
+
+//     );
+//   }
 }
