@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:medichain/data/services/doctor_service.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../data/services/doctor_services/doctor_auth_service.dart';
@@ -41,6 +44,44 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     });
   }
 
+  Future<void> _pickAndUploadImage() async {
+    if (_doctor == null) return;
+
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+
+    if (image != null) {
+      setState(() => _isLoading = true);
+
+      final doctorService = DoctorService();
+      final String? newImageUrl = await doctorService.uploadDoctorProfileImage(
+        File(image.path),
+        _doctor!['id'],
+      );
+
+      if (mounted) {
+        if (newImageUrl != null) {
+          setState(() {
+            _doctor!['profile_image_url'] = newImageUrl;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile picture updated successfully!'),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to upload profile picture')),
+          );
+        }
+      }
+      setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _changePassword() async {
     if (!_passwordFormKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
@@ -80,7 +121,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.blueDark,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.bluePrimary))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.bluePrimary),
+            )
           : CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(child: _buildHeader()),
@@ -126,32 +169,63 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
           child: Column(
             children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 3),
-                  image: _doctor?['profile_image_url'] != null
-                      ? DecorationImage(
-                          image: NetworkImage(_doctor!['profile_image_url']),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: _doctor?['profile_image_url'] == null
-                    ? Center(
-                        child: Text(
-                          initials,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w800,
-                          ),
+              Stack(
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        width: 3,
+                      ),
+                      image: _doctor?['profile_image_url'] != null
+                          ? DecorationImage(
+                              image: NetworkImage(
+                                _doctor!['profile_image_url'],
+                              ),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    child: _doctor?['profile_image_url'] == null
+                        ? Center(
+                            child: Text(
+                              initials,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: _pickAndUploadImage,
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(color: Colors.black12, blurRadius: 4),
+                          ],
                         ),
-                      )
-                    : null,
+                        child: const Icon(
+                          Icons.camera_alt,
+                          size: 13,
+                          color: AppColors.bluePrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Text(
@@ -169,13 +243,18 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               ),
               const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  _doctor?['account_status'] == true ? '🟢 Active' : '🔴 Inactive',
+                  _doctor?['account_status'] == true
+                      ? '🟢 Active'
+                      : '🔴 Inactive',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -192,10 +271,26 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
   Widget _buildInfoCard() {
     final infoRows = [
-      {'icon': Icons.email_outlined, 'label': 'Email', 'value': _doctor?['email'] ?? '-'},
-      {'icon': Icons.local_hospital_outlined, 'label': 'Department', 'value': _doctor?['department'] ?? '-'},
-      {'icon': Icons.currency_rupee, 'label': 'Consultation Fee', 'value': '৳${_doctor?['consultation_fee'] ?? 0}'},
-      {'icon': Icons.timer_outlined, 'label': 'Slot Duration', 'value': '${_doctor?['slot_duration'] ?? 20} minutes'},
+      {
+        'icon': Icons.email_outlined,
+        'label': 'Email',
+        'value': _doctor?['email'] ?? '-',
+      },
+      {
+        'icon': Icons.local_hospital_outlined,
+        'label': 'Department',
+        'value': _doctor?['department'] ?? '-',
+      },
+      {
+        'icon': Icons.currency_rupee,
+        'label': 'Consultation Fee',
+        'value': '৳${_doctor?['consultation_fee'] ?? 0}',
+      },
+      {
+        'icon': Icons.timer_outlined,
+        'label': 'Slot Duration',
+        'value': '${_doctor?['slot_duration'] ?? 20} minutes',
+      },
     ];
 
     return Transform.translate(
@@ -227,7 +322,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   border: i < infoRows.length - 1
-                      ? const Border(bottom: BorderSide(color: Color(0xFFF9FAFB)))
+                      ? const Border(
+                          bottom: BorderSide(color: Color(0xFFF9FAFB)),
+                        )
                       : null,
                 ),
                 child: Row(
@@ -239,7 +336,11 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         color: AppColors.blueLight,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(row['icon'] as IconData, color: AppColors.blueMid, size: 16),
+                      child: Icon(
+                        row['icon'] as IconData,
+                        color: AppColors.blueMid,
+                        size: 16,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Column(
@@ -247,7 +348,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                       children: [
                         Text(
                           row['label'] as String,
-                          style: const TextStyle(fontSize: 11, color: AppColors.textTertiary),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textTertiary,
+                          ),
                         ),
                         Text(
                           row['value'] as String,
@@ -294,7 +398,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('New Password', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              const Text(
+                'New Password',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _newPasswordController,
@@ -302,19 +409,29 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 validator: Validators.validatePassword,
                 decoration: InputDecoration(
                   hintText: '••••••••',
-                  prefixIcon: const Icon(Icons.lock_outline, size: 18, color: AppColors.textTertiary),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    size: 18,
+                    color: AppColors.textTertiary,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _newPassVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _newPassVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       size: 18,
                       color: AppColors.textTertiary,
                     ),
-                    onPressed: () => setState(() => _newPassVisible = !_newPassVisible),
+                    onPressed: () =>
+                        setState(() => _newPassVisible = !_newPassVisible),
                   ),
                 ),
               ),
               const SizedBox(height: 12),
-              const Text('Confirm Password', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              const Text(
+                'Confirm Password',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _confirmPasswordController,
@@ -325,14 +442,22 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 ),
                 decoration: InputDecoration(
                   hintText: '••••••••',
-                  prefixIcon: const Icon(Icons.lock_outline, size: 18, color: AppColors.textTertiary),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    size: 18,
+                    color: AppColors.textTertiary,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _confirmPassVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _confirmPassVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       size: 18,
                       color: AppColors.textTertiary,
                     ),
-                    onPressed: () => setState(() => _confirmPassVisible = !_confirmPassVisible),
+                    onPressed: () => setState(
+                      () => _confirmPassVisible = !_confirmPassVisible,
+                    ),
                   ),
                 ),
               ),
@@ -352,7 +477,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                       ? const SizedBox(
                           height: 18,
                           width: 18,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Text('Update Password'),
                 ),
@@ -378,9 +506,14 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             backgroundColor: AppColors.redLight,
             foregroundColor: AppColors.redText,
             padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
-          child: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.w700)),
+          child: const Text(
+            'Sign Out',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
         ),
       ),
     );
@@ -401,8 +534,14 @@ Widget _buildBottomNav(BuildContext context, int currentIndex) {
         elevation: 0,
         selectedItemColor: AppColors.bluePrimary,
         unselectedItemColor: AppColors.textTertiary,
-        selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
-        unselectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+        selectedLabelStyle: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+        ),
         onTap: (index) {
           if (index == 0) context.go('/doctor-schedule');
           if (index == 1) context.go('/doctor-patients');
@@ -410,10 +549,26 @@ Widget _buildBottomNav(BuildContext context, int currentIndex) {
           if (index == 3) context.go('/doctor-profile');
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), activeIcon: Icon(Icons.calendar_today), label: 'Schedule'),
-          BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'Patients'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined), activeIcon: Icon(Icons.notifications), label: 'Alerts'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today_outlined),
+            activeIcon: Icon(Icons.calendar_today),
+            label: 'Schedule',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people_outline),
+            activeIcon: Icon(Icons.people),
+            label: 'Patients',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_outlined),
+            activeIcon: Icon(Icons.notifications),
+            label: 'Alerts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
       ),
     ),

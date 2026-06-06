@@ -28,6 +28,8 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
   final _qualificationsController = TextEditingController();
   final _feeController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _startTimeController = TextEditingController();
+  final _endTimeController = TextEditingController();
 
   String _selectedDepartment = AppStrings.departments[0];
   int _selectedSlotDuration = 30;
@@ -52,9 +54,28 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
       _selectedSlotDuration = widget.doctor!.slotDuration;
       _selectedDays = List.from(widget.doctor!.availableDays);
       _existingImageUrl = widget.doctor!.profileImageUrl;
+      _startTimeController.text = widget.doctor!.startTime ?? '';
+      _endTimeController.text = widget.doctor!.endTime ?? '';
     }
   }
 
+  // --- Time Picker ---
+  Future<void> _selectTime(
+    BuildContext context,
+    TextEditingController controller,
+  ) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        controller.text = picked.format(context);
+      });
+    }
+  }
+
+  // --- Pick Image ---
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(
@@ -70,7 +91,9 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
       if (extension != 'jpg' && extension != 'jpeg' && extension != 'png') {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Only JPEG and PNG images are allowed')),
+            const SnackBar(
+              content: Text('Only JPEG and PNG images are allowed'),
+            ),
           );
         }
         return;
@@ -88,11 +111,14 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
     }
   }
 
+  // --- Save / Update ---
   Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedDays.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one available day')),
+        const SnackBar(
+          content: Text('Please select at least one available day'),
+        ),
       );
       return;
     }
@@ -122,7 +148,9 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
       department: _selectedDepartment,
       slotDuration: _selectedSlotDuration,
       availableDays: _selectedDays,
-      timeSlots: const [],
+      startTime: _startTimeController.text.trim(),
+      endTime: _endTimeController.text.trim(),
+      maxPatientsPerDay: widget.doctor?.maxPatientsPerDay ?? 50,
       profileImageUrl: imageUrl,
       accountStatus: true,
     );
@@ -131,7 +159,10 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
     if (_isEditing) {
       success = await _doctorService.updateDoctor(widget.doctor!.id!, doctor);
     } else {
-      success = await _doctorService.addDoctor(doctor, _passwordController.text);
+      success = await _doctorService.addDoctor(
+        doctor,
+        _passwordController.text,
+      );
     }
 
     setState(() => _isLoading = false);
@@ -141,7 +172,9 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              _isEditing ? 'Doctor updated successfully' : 'Doctor added successfully',
+              _isEditing
+                  ? 'Doctor updated successfully'
+                  : 'Doctor added successfully',
             ),
           ),
         );
@@ -162,6 +195,8 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
     _qualificationsController.dispose();
     _feeController.dispose();
     _passwordController.dispose();
+    _startTimeController.dispose();
+    _endTimeController.dispose();
     super.dispose();
   }
 
@@ -185,7 +220,7 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Profile Image
+              // --- Profile Image ---
               Center(
                 child: GestureDetector(
                   onTap: _pickImage,
@@ -199,7 +234,9 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
                                       ? NetworkImage(_existingImageUrl!)
                                       : null)
                                   as ImageProvider?,
-                        child: (_selectedImage == null && _existingImageUrl == null)
+                        child:
+                            (_selectedImage == null &&
+                                _existingImageUrl == null)
                             ? const Icon(Icons.person, size: 50)
                             : null,
                       ),
@@ -212,8 +249,11 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
                             color: AppColors.primary,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.camera_alt,
-                              color: Colors.white, size: 16),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                         ),
                       ),
                     ],
@@ -269,9 +309,11 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
                   decoration: InputDecoration(
                     hintText: 'Set login password',
                     suffixIcon: IconButton(
-                      icon: Icon(_passwordVisible
-                          ? Icons.visibility_off
-                          : Icons.visibility),
+                      icon: Icon(
+                        _passwordVisible
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
                       onPressed: () =>
                           setState(() => _passwordVisible = !_passwordVisible),
                     ),
@@ -287,12 +329,63 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
               DropdownButtonFormField<String>(
                 value: _selectedDepartment,
                 items: AppStrings.departments
-                    .map((dept) =>
-                        DropdownMenuItem(value: dept, child: Text(dept)))
+                    .map(
+                      (dept) =>
+                          DropdownMenuItem(value: dept, child: Text(dept)),
+                    )
                     .toList(),
                 onChanged: (value) =>
                     setState(() => _selectedDepartment = value!),
-                decoration: const InputDecoration(hintText: 'Select department'),
+                decoration: const InputDecoration(
+                  hintText: 'Select department',
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // --- Start & End Time ---
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildLabel('Start Time *'),
+                        TextFormField(
+                          controller: _startTimeController,
+                          readOnly: true,
+                          onTap: () =>
+                              _selectTime(context, _startTimeController),
+                          validator: (v) =>
+                              v == null || v.isEmpty ? 'Required' : null,
+                          decoration: const InputDecoration(
+                            hintText: '03:00 PM',
+                            suffixIcon: Icon(Icons.access_time),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildLabel('End Time *'),
+                        TextFormField(
+                          controller: _endTimeController,
+                          readOnly: true,
+                          onTap: () => _selectTime(context, _endTimeController),
+                          validator: (v) =>
+                              v == null || v.isEmpty ? 'Required' : null,
+                          decoration: const InputDecoration(
+                            hintText: '07:00 PM',
+                            suffixIcon: Icon(Icons.access_time),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
 
@@ -309,12 +402,18 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
               DropdownButtonFormField<int>(
                 value: _selectedSlotDuration,
                 items: const [15, 20, 30, 45, 60]
-                    .map((min) => DropdownMenuItem(
-                        value: min, child: Text('$min minutes')))
+                    .map(
+                      (min) => DropdownMenuItem(
+                        value: min,
+                        child: Text('$min minutes'),
+                      ),
+                    )
                     .toList(),
                 onChanged: (value) =>
                     setState(() => _selectedSlotDuration = value!),
-                decoration: const InputDecoration(hintText: 'Select slot duration'),
+                decoration: const InputDecoration(
+                  hintText: 'Select slot duration',
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -328,20 +427,27 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
                     label: Text(
                       day.substring(0, 3),
                       style: TextStyle(
-                        color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.textPrimary,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                         fontSize: 13,
                       ),
                     ),
                     selected: isSelected,
-                    selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                    selectedColor: AppColors.primary.withAlpha(38),
                     backgroundColor: Colors.white,
                     checkmarkColor: AppColors.primary,
                     side: BorderSide(
                       color: isSelected ? AppColors.primary : AppColors.border,
                       width: 1.5,
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                     onSelected: (selected) {
                       setState(() {
                         if (selected) {
@@ -404,3 +510,4 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
     );
   }
 }
+ 

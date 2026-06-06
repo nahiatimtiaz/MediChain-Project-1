@@ -1,17 +1,17 @@
+import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/doctor_model.dart';
 
 class DoctorService {
   final _supabase = Supabase.instance.client;
 
-  // Get all doctors from database
+  // Get all doctors
   Future<List<DoctorModel>> getAllDoctors() async {
     try {
       final response = await _supabase
           .from('doctors')
           .select()
           .order('full_name', ascending: true);
-
       return (response as List)
           .map((json) => DoctorModel.fromJson(json))
           .toList();
@@ -21,12 +21,11 @@ class DoctorService {
     }
   }
 
-  // Add new doctor with fixed sequential insert and email mapping
+  // Add new doctor
   Future<bool> addDoctor(DoctorModel doctor, String password) async {
     try {
       print('Adding doctor: ${doctor.email}');
 
-      // 1. Sign up the user inside Supabase Auth
       final AuthResponse authResponse = await _supabase.auth.signUp(
         email: doctor.email,
         password: password,
@@ -35,34 +34,33 @@ class DoctorService {
       final String? authUserId = authResponse.user?.id;
 
       if (authUserId != null) {
-        // 2. Log action to audit_logs table
-        await _logAction(
-          'ADD_DOCTOR',
-          doctor.email,
-          'Added new doctor: ${doctor.fullName}',
-        );
-
-        // 3. Insert directly into public.doctors table including the missing email column
         await _supabase.from('doctors').insert({
           'id': authUserId,
           'doctor_id': doctor.doctorId,
           'full_name': doctor.fullName,
-          'email': doctor
-              .email, // Fixed: Added missing email mapping to satisfy not-null constraint
+          'email': doctor.email,
           'department': doctor.department,
           'qualifications': doctor.qualifications,
           'phone': doctor.phone,
           'consultation_fee': doctor.consultationFee,
           'slot_duration': doctor.slotDuration,
           'available_days': doctor.availableDays,
+          'start_time': doctor.startTime,
+          'end_time': doctor.endTime,
+          'max_patients_per_day': doctor.maxPatientsPerDay,
           'profile_image_url': doctor.profileImageUrl,
-          'account_status': doctor.accountStatus,
+          'account_status': true,
         });
 
-        print('Doctor added successfully to doctors table');
+        await _logAction(
+          'ADD_DOCTOR',
+          doctor.email,
+          'Added new doctor: ${doctor.fullName}',
+        );
+
+        print('Doctor added successfully');
         return true;
       }
-
       return false;
     } catch (e) {
       print('ADD DOCTOR ERROR: $e');
@@ -70,7 +68,7 @@ class DoctorService {
     }
   }
 
-  // Update existing doctor info
+  // Update existing doctor
   Future<bool> updateDoctor(String doctorId, DoctorModel doctor) async {
     try {
       await _supabase
@@ -83,6 +81,9 @@ class DoctorService {
             'department': doctor.department,
             'slot_duration': doctor.slotDuration,
             'available_days': doctor.availableDays,
+            'start_time': doctor.startTime,
+            'end_time': doctor.endTime,
+            'max_patients_per_day': doctor.maxPatientsPerDay,
             'profile_image_url': doctor.profileImageUrl,
           })
           .eq('id', doctorId);
@@ -108,7 +109,6 @@ class DoctorService {
         doctorId,
         'Deleted doctor: $doctorName',
       );
-
       await _supabase.from('doctors').delete().eq('id', doctorId);
       return true;
     } catch (e) {
@@ -124,7 +124,6 @@ class DoctorService {
           .from('doctors')
           .update({'account_status': newStatus})
           .eq('id', doctorId);
-
       return true;
     } catch (e) {
       print('TOGGLE STATUS ERROR: $e');
@@ -132,16 +131,14 @@ class DoctorService {
     }
   }
 
-  // Reset doctor password using RPC
+  // Reset doctor password
   Future<bool> resetDoctorPassword(String email, String newPassword) async {
     try {
       await _supabase.rpc(
         'admin_set_doctor_password',
         params: {'doctor_email': email, 'new_password': newPassword},
       );
-
       await _logAction('RESET_PASSWORD', email, 'Password reset for: $email');
-
       return true;
     } catch (e) {
       print('RESET PASSWORD ERROR: $e');
@@ -158,7 +155,6 @@ class DoctorService {
           .or(
             'full_name.ilike.%$query%,department.ilike.%$query%,doctor_id.ilike.%$query%',
           );
-
       return (response as List)
           .map((json) => DoctorModel.fromJson(json))
           .toList();
@@ -175,13 +171,40 @@ class DoctorService {
           .from('doctors')
           .select()
           .eq('department', department);
-
       return (response as List)
           .map((json) => DoctorModel.fromJson(json))
           .toList();
     } catch (e) {
       print('FILTER BY DEPARTMENT ERROR: $e');
       return [];
+    }
+  }
+
+  // Upload doctor profile image
+  Future<String?> uploadDoctorProfileImage(
+    File imageFile,
+    String doctorId,
+  ) async {
+    try {
+      final fileName = '$doctorId-${DateTime.now().millisecondsSinceEpoch}.jpg';
+      await _supabase.storage
+          .from('doctor-images')
+          .upload(
+            fileName,
+            imageFile,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+          );
+      final String imageUrl = _supabase.storage
+          .from('doctor-images')
+          .getPublicUrl(fileName);
+      await _supabase
+          .from('doctors')
+          .update({'profile_image_url': imageUrl})
+          .eq('id', doctorId);
+      return imageUrl;
+    } catch (e) {
+      print('UPLOAD DOCTOR IMAGE ERROR: $e');
+      return null;
     }
   }
 
@@ -193,7 +216,6 @@ class DoctorService {
   ) async {
     try {
       final adminId = _supabase.auth.currentUser?.id;
-
       await _supabase.from('audit_logs').insert({
         'admin_id': adminId,
         'action_type': actionType,

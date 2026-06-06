@@ -5,6 +5,7 @@ import '../presentation/screens/dashboard/dashboard_screen.dart';
 import '../presentation/screens/doctors/doctor_list_screen.dart';
 import '../presentation/screens/doctors/add_edit_doctor_screen.dart';
 import '../presentation/screens/profile/admin_profile_screen.dart';
+import '../presentation/screens/activiti/admin_activities_screen.dart'; // Added for activity log screen
 import '../presentation/screens/doctor_panel/auth/doctor_login_screen.dart';
 import '../presentation/screens/doctor_panel/schedule/schedule_screen.dart';
 import '../presentation/screens/doctor_panel/schedule/appointment_detail_screen.dart';
@@ -44,6 +45,10 @@ class AppRouter {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const AdminProfileScreen(),
+      ),
+      GoRoute(
+        path: '/admin-activities', // Route added for See All action
+        builder: (context, state) => const AdminActivitiesScreen(),
       ),
 
       // Doctor Panel Routes
