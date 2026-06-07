@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; 
-import 'package:medichain/patient/home_page.dart';
-import 'package:medichain/patient/patient_reg.dart';
 import 'package:go_router/go_router.dart';
-// import 'package:medichain/patient/home_page.dart';
 
 class PatientLoginScreen extends StatefulWidget {
   const PatientLoginScreen({super.key});
@@ -59,12 +56,7 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
 
           if (!mounted) return;
 
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const HomePage(),
-    ),
-  );
+          context.go('/patient-home-page');
 
         }
       }
@@ -101,151 +93,281 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            width: 420,
-            padding: const EdgeInsets.all(24),
-            child: Card(
-              elevation: 8,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(30),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.local_hospital,
-                      size: 70,
-                      color: Colors.blue,
-                    ),
-                    const SizedBox(height: 15),
-                    const Text(
-                      'Patient Login',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Welcome Back',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 30),
+  backgroundColor: const Color(0xFF0F172A),
+  body: Column(
+    children: [
 
-                    // Email Field
-                    TextField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: 'Enter your email',
-                        prefixIcon: const Icon(Icons.email),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+      // Header
+      Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF2563EB),
+              Color.fromARGB(255, 182, 199, 255),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
 
-                    // Password Field
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: !_passwordVisible,
-                      decoration: InputDecoration(
-                        hintText: 'Enter your password',
-                        prefixIcon: const Icon(Icons.lock),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _passwordVisible
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _passwordVisible = !_passwordVisible;
-                            });
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-
-                    // Login Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _loginPatient,
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text(
-                                'Login',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                ),
-                              ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 20), // Spacer below button
-
-                    // 2. Added Registration Link Flow Here:
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Don't have an account?",
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            // Navigates to the signup page safely
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const PatientRegistrationScreen(),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            'Register here',
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: const Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 30,
+                  ),
                 ),
-              ),
+
+                const SizedBox(height: 20),
+
+                const Text(
+                  'Welcome Back',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+
+                const SizedBox(height: 5),
+
+                const Text(
+                  'Patient Portal',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Secure Access',
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       ),
-    );
+
+      // Form Section
+      Expanded(
+        child: Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                        GestureDetector(
+                          onTap: () => context.go('/'),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.arrow_back, color: Colors.white, size: 18),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                const Text(
+                  'Sign In',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 5),
+
+                const Text(
+                  'Enter your account credentials',
+                  style: TextStyle(
+                    color: Colors.grey,
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                const Text(
+                  'EMAIL',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                    letterSpacing: 1,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                TextField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    hintText: 'example@email.com',
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                const Text(
+                  'PASSWORD',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                    letterSpacing: 1,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                TextField(
+                  controller: _passwordController,
+                  obscureText: !_passwordVisible,
+                  decoration: InputDecoration(
+                    hintText: '••••••••',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _passwordVisible
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _passwordVisible = !_passwordVisible;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 35),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _loginPatient,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                          )
+                        : const Text(
+                            'Sign In →',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+
+                Center(
+                  child: Column(
+                    children: [
+
+                      const Text(
+                        "Don't have an account?",
+                        style: TextStyle(
+                          color: Colors.grey,
+                        ),
+                      ),
+
+                      TextButton(
+                        onPressed: () {
+                          context.go('/patient-reg');
+                        },
+                        child: const Text(
+                          'Register here',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 78, 100, 149),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      const Text(
+                        'Not a patient?',
+                        style: TextStyle(
+                          color: Colors.grey,
+                        ),
+                      ),
+
+                      TextButton(
+                        onPressed: () {
+                          context.go('/');
+                        },
+                        child: const Text(
+                          'Login as Doctor/Admin',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 78, 100, 149),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ],
+  ),
+);
   }
 }

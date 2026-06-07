@@ -560,12 +560,14 @@ Widget _buildBottomNav(BuildContext context, int currentIndex) {
           if (index == 1) context.go('/doctor-patients');
           if (index == 2) context.go('/doctor-notifications');
           if (index == 3) context.go('/doctor-profile');
+          if (index == 4) context.go('/doctor-community');
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), activeIcon: Icon(Icons.calendar_today), label: 'Schedule'),
           BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'Patients'),
           BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined), activeIcon: Icon(Icons.notifications), label: 'Alerts'),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(icon: Icon(Icons.groups), activeIcon: Icon(Icons.groups), label: 'Community'),
         ],
       ),
     ),

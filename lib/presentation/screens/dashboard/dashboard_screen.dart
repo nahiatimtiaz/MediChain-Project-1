@@ -318,7 +318,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 12,
+          crossAxisSpacing: 25,
           mainAxisSpacing: 12,
           childAspectRatio: 2.6,
           children: actions.map((a) {

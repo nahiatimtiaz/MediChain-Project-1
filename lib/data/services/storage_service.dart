@@ -46,6 +46,27 @@ class StorageService {
     }
   }
 
+  Future<String?> uploadPatientImage(File imageFile, String userId) async {
+    try {
+
+      final fileName =
+          '${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final filePath = 'patients/$fileName';
+
+      // Upload image to Supabase storage bucket 'patient-images'
+      await _supabase.storage.from('patient-images').upload(filePath, imageFile);
+
+      // Get public URL of uploaded image
+      final imageUrl = _supabase.storage
+          .from('patient-images')
+          .getPublicUrl(filePath);
+
+      return imageUrl;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Delete old image from storage
   Future<void> deleteImage(String bucket, String imageUrl) async {
     try {

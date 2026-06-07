@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'package:go_router/go_router.dart';
+//import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:open_filex/open_filex.dart';
+//import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -18,16 +18,16 @@ class PatientHistoryPage extends StatefulWidget {
 class _PatientHistoryPageState extends State<PatientHistoryPage> {
   final supabase = Supabase.instance.client;
 
-  List visits = [];
+  List prescriptions = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchVisits();
+    fetchPrescriptions();
   }
 
-  Future<void> fetchVisits() async {
+  Future<void> fetchPrescriptions() async {
     try {
       setState(() {
         isLoading = true;
@@ -38,29 +38,28 @@ class _PatientHistoryPageState extends State<PatientHistoryPage> {
       if (user == null) return;
 
       final response = await supabase
-          .from('visits')
+          .from('prescriptions')
           .select('''
             *,
             doctors (
               full_name,
               department
-            ),
-            reports (*)
+            )
           ''')
           .eq('patient_id', user.id)
           .order(
-            'visit_date',
+            'created_at',
             ascending: false,
           );
 
       if (mounted) {
         setState(() {
-          visits = response;
+          prescriptions = response;
           isLoading = false;
         });
       }
     } catch (e) {
-      debugPrint("FETCH VISITS ERROR: $e");
+      debugPrint("FETCH PRESCRIPTIONS ERROR: $e");
       if (mounted) {
         setState(() {
           isLoading = false;
@@ -98,7 +97,7 @@ class _PatientHistoryPageState extends State<PatientHistoryPage> {
         'report_type': result.files.single.extension,
       });
 
-      fetchVisits();
+      fetchPrescriptions();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -130,14 +129,14 @@ class _PatientHistoryPageState extends State<PatientHistoryPage> {
             ? const Center(
                 child: CircularProgressIndicator(),
               )
-            : visits.isEmpty
+            : prescriptions.isEmpty
                 ? buildEmptyState()
                 : ListView.builder(
                     padding: const EdgeInsets.all(20),
-                    itemCount: visits.length,
+                    itemCount: prescriptions.length,
                     itemBuilder: (context, index) {
-                      final visit = visits[index];
-                      final reports = visit['reports'] ?? [];
+                      final prescription = prescriptions[index];
+                      final reports = prescription ['reports'] ?? [];
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 20),
@@ -175,7 +174,7 @@ class _PatientHistoryPageState extends State<PatientHistoryPage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        visit['doctors']?['full_name'] ??
+                                        prescription['doctors']?['full_name'] ??
                                             'Doctor',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
@@ -183,7 +182,7 @@ class _PatientHistoryPageState extends State<PatientHistoryPage> {
                                         ),
                                       ),
                                       Text(
-                                        visit['doctors']?['department'] ?? '',
+                                        prescription['doctors']?['department'] ?? '',
                                         style: TextStyle(
                                           color: Colors.grey.shade600,
                                         ),
@@ -195,20 +194,20 @@ class _PatientHistoryPageState extends State<PatientHistoryPage> {
                             ),
                             const SizedBox(height: 18),
                             detailRow(
-                              "Visit Date",
-                              visit['visit_date'] != null
+                              "Prescription Date",
+                              prescription['created_at'] != null
                                   ? DateFormat('dd MMM yyyy').format(
-                                      DateTime.parse(visit['visit_date']),
+                                      DateTime.parse(prescription['created_at']),
                                     )
                                   : '',
                             ),
                             detailRow(
                               "Diagnosis",
-                              visit['diagnosis'] ?? '',
+                              prescription['diagnosis'] ?? '',
                             ),
                             detailRow(
                               "Notes",
-                              visit['notes'] ?? '',
+                              prescription['notes'] ?? '',
                             ),
                             const SizedBox(height: 20),
                             const Text(
@@ -266,7 +265,7 @@ class _PatientHistoryPageState extends State<PatientHistoryPage> {
                               alignment: Alignment.centerRight,
                               child: ElevatedButton.icon(
                                 onPressed: () {
-                                  uploadReport(visit['id']);
+                                  uploadReport(prescription['id']);
                                 },
                                 icon: const Icon(Icons.upload),
                                 label: const Text("Upload Report"),

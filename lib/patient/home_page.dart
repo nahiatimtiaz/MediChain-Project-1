@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:medichain/patient/patient_profile.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:medichain/blog/blog.dart';
 import 'package:medichain/patient/patient_history.dart';
@@ -143,6 +144,7 @@ class _HomePageState extends State<HomePage> {
             'Welcome, $welcomeName',
             style: const TextStyle(
               fontSize: 24,
+              color: Color.fromARGB(221, 45, 155, 206),
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -157,7 +159,10 @@ class _HomePageState extends State<HomePage> {
             style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 24),
-
+          Text(
+            'Your Information',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.blueGrey[800]),
+          ),
           Card(
             elevation: 4,
             shape: RoundedRectangleBorder(
@@ -292,17 +297,18 @@ class _HomePageState extends State<HomePage> {
       const DoctorSearchPage(),
       const PatientHistoryPage(),
       const CommunityPage(),
+      const PatientProfileScreen(),
     ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F9FF),
 
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 3, 72, 157),
         elevation: 1,
         title: const Text(
           'Medichain',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Color.fromARGB(255, 255, 255, 255), fontWeight: FontWeight.bold),
         ),
 
         actions: [
@@ -318,7 +324,7 @@ class _HomePageState extends State<HomePage> {
               return Stack(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.notifications_none, color: Colors.black),
+                    icon: const Icon(Icons.notifications_none, color: Color.fromARGB(255, 255, 255, 255)),
                     onPressed: () {
                       showNotificationsDropdown(context);
                     },
@@ -363,6 +369,7 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Doctors'),
           BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
           BottomNavigationBarItem(icon: Icon(Icons.groups), label: 'Community'),
+          BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Profile'),
         ],
       ),
     );

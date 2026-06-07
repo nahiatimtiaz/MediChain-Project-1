@@ -14,6 +14,8 @@ class DoctorModel {
   final String? phone;
   final bool accountStatus;
   final DateTime? createdAt;
+  final String? chamberStartTime;
+ final String? chamberEndTime;
 
   DoctorModel({
     this.id,
@@ -30,6 +32,8 @@ class DoctorModel {
     this.phone,
     this.accountStatus = true,
     this.createdAt,
+    this.chamberStartTime,
+    this.chamberEndTime,
   });
 
   // Convert Supabase JSON to DoctorModel

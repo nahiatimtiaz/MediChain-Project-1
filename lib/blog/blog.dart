@@ -598,10 +598,8 @@ class _CommunityPageState
       Expanded(
         child: ElevatedButton.icon(
           onPressed: pickImage,
-
           icon: const Icon(Icons.image),
-
-          label: const Text("Image"),
+          label: const Text("Image", style: TextStyle(color: Colors.white)),
         ),
       ),
 

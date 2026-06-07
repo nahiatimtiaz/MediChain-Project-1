@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:medichain/blog/blog.dart';
 import '../presentation/screens/entry/entry_screen.dart';
 import '../presentation/screens/auth/login_screen.dart';
 import '../presentation/screens/dashboard/dashboard_screen.dart';
@@ -89,26 +90,29 @@ class AppRouter {
         builder: (context, state) => const NotificationScreen(),
       ),
       GoRoute(
-        path: '/patient-login',
-        builder: (context, state) => const PatientLoginScreen(),
+        path: '/patient-reg',
+        builder:(context, state) => const PatientRegistrationScreen(),
       ),
       GoRoute(
-        path: '/doctor-search-page',
-        builder: (context, state) => const DoctorSearchPage(),
+        path: '/patient-login',
+        builder: (context, state) => const PatientLoginScreen(),
       ),
       GoRoute(
         path: '/patient-home-page',
         builder: (context, state) => const HomePage(),
       ),
       GoRoute(
+        path: '/doctor-search-page',
+        builder: (context, state) => const DoctorSearchPage(),
+      ),
+      GoRoute(
         path: '/patient-history',
         builder: (context, state) => const PatientHistoryPage(),
       ),
       GoRoute(
-        path: '/patient-reg',
-        builder:(context, state) => const PatientRegistrationScreen(),
-        
-        )
+        path: '/doctor-community',
+        builder: (context, state) => const CommunityPage(),
+      ),
     ],
   );
 }
