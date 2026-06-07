@@ -1,4 +1,5 @@
 class AppointmentModel {
+  // --- Fields ---
   final String? id;
   final String? appointmentId;
   final String doctorId;
@@ -9,11 +10,12 @@ class AppointmentModel {
   final String status;
   final DateTime? createdAt;
 
-  // Patient info joined from patients table
+  // --- Joined Patient Info ---
   final String? patientName;
   final String? patientPhone;
   final String? patientUniqueId;
 
+  // --- Constructor ---
   AppointmentModel({
     this.id,
     this.appointmentId,
@@ -29,16 +31,18 @@ class AppointmentModel {
     this.patientUniqueId,
   });
 
-  // Convert Supabase JSON to AppointmentModel
+  // --- From JSON ---
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
     return AppointmentModel(
       id: json['id'],
       appointmentId: json['appointment_id'],
-      doctorId: json['doctor_id'],
-      patientId: json['patient_id'],
-      appointmentDate: DateTime.parse(json['appointment_date']),
-      timeSlot: json['time_slot'],
-      serialNumber: json['serial_number'],
+      doctorId: json['doctor_id'] ?? '',
+      patientId: json['patient_id'] ?? '',
+      appointmentDate: json['appointment_date'] != null
+          ? DateTime.parse(json['appointment_date'])
+          : DateTime.now(),
+      timeSlot: json['time_slot'] ?? '',
+      serialNumber: json['serial_number'] ?? 0,
       status: json['status'] ?? 'Pending',
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
@@ -49,7 +53,7 @@ class AppointmentModel {
     );
   }
 
-  // Convert AppointmentModel to JSON for Supabase
+  // --- To JSON ---
   Map<String, dynamic> toJson() {
     return {
       'doctor_id': doctorId,

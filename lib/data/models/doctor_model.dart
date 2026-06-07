@@ -1,4 +1,3 @@
-// Doctor Data Model
 class DoctorModel {
   final String? id;
   final String? doctorId;
@@ -7,8 +6,10 @@ class DoctorModel {
   final String? qualifications;
   final double consultationFee;
   final List<String> availableDays;
-  final List<Map<String, String>> timeSlots;
+  final String? startTime;
+  final String? endTime;
   final int slotDuration;
+  final int maxPatientsPerDay;
   final String? profileImageUrl;
   final String email;
   final String? phone;
@@ -25,8 +26,10 @@ class DoctorModel {
     this.qualifications,
     required this.consultationFee,
     required this.availableDays,
-    required this.timeSlots,
+    this.startTime,
+    this.endTime,
     required this.slotDuration,
+    this.maxPatientsPerDay = 50,
     this.profileImageUrl,
     required this.email,
     this.phone,
@@ -41,19 +44,17 @@ class DoctorModel {
     return DoctorModel(
       id: json['id'],
       doctorId: json['doctor_id'],
-      fullName: json['full_name'],
-      department: json['department'],
+      fullName: json['full_name'] ?? '',
+      department: json['department'] ?? '',
       qualifications: json['qualifications'],
-      consultationFee: (json['consultation_fee'] as num).toDouble(),
+      consultationFee: (json['consultation_fee'] as num?)?.toDouble() ?? 0.0,
       availableDays: List<String>.from(json['available_days'] ?? []),
-      timeSlots:
-          (json['time_slots'] as List<dynamic>?)
-              ?.map((e) => Map<String, String>.from(e))
-              .toList() ??
-          [],
-      slotDuration: json['slot_duration'] ?? 30,
+      startTime: json['start_time'],
+      endTime: json['end_time'],
+      slotDuration: json['slot_duration'] ?? 15,
+      maxPatientsPerDay: json['max_patients_per_day'] ?? 50,
       profileImageUrl: json['profile_image_url'],
-      email: json['email'],
+      email: json['email'] ?? '',
       phone: json['phone'],
       accountStatus: json['account_status'] ?? true,
       createdAt: json['created_at'] != null
@@ -70,8 +71,10 @@ class DoctorModel {
       'qualifications': qualifications,
       'consultation_fee': consultationFee,
       'available_days': availableDays,
-      'time_slots': timeSlots,
+      'start_time': startTime,
+      'end_time': endTime,
       'slot_duration': slotDuration,
+      'max_patients_per_day': maxPatientsPerDay,
       'profile_image_url': profileImageUrl,
       'email': email,
       'phone': phone,
