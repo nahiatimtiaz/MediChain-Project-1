@@ -1,20 +1,20 @@
 import 'package:go_router/go_router.dart';
-import '../presentation/screens/entry/entry_screen.dart';
-import '../presentation/screens/auth/login_screen.dart';
-import '../presentation/screens/dashboard/dashboard_screen.dart';
-import '../presentation/screens/doctors/doctor_list_screen.dart';
-import '../presentation/screens/doctors/add_edit_doctor_screen.dart';
-import '../presentation/screens/profile/admin_profile_screen.dart';
-import '../presentation/screens/activiti/admin_activities_screen.dart'; // Added for activity log screen
-import '../presentation/screens/doctor_panel/auth/doctor_login_screen.dart';
-import '../presentation/screens/doctor_panel/schedule/schedule_screen.dart';
-import '../presentation/screens/doctor_panel/schedule/appointment_detail_screen.dart';
-import '../presentation/screens/doctor_panel/patient_history/patient_search_screen.dart';
-import '../presentation/screens/doctor_panel/patient_history/patient_detail_screen.dart';
-import '../presentation/screens/doctor_panel/prescription/add_prescription_screen.dart';
-import '../presentation/screens/doctor_panel/profile/doctor_profile_screen.dart';
-import '../presentation/screens/doctor_panel/notifications/notification_screen.dart';
-import '../data/models/doctor_models/appointment_model.dart';
+import '../doctors/entry_screen.dart';
+import '../admin/login_screen.dart';
+import '../admin/dashboard_screen.dart';
+import '../doctors/doctor_list_screen.dart';
+import '../doctors/add_edit_doctor_screen.dart';
+import '../admin/admin_profile_screen.dart';
+import '../admin/activiti/admin_activities_screen.dart'; // Added for activity log screen
+import '../doctors/doctor_login_screen.dart';
+import '../doctors/schedule_screen.dart';
+import '../doctors/appointment_detail_screen.dart';
+import '../doctors/patient_search_screen.dart';
+import '../doctors/patient_detail_screen.dart';
+import '../doctors/add_prescription_screen.dart';
+import '../doctors/doctor_profile_screen.dart';
+import '../doctors/notification_screen.dart';
+import '../doctors/appointment_model.dart';
 
 class AppRouter {
   static final router = GoRouter(
