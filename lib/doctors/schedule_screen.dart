@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../admin/app_constants.dart';
 import 'doctor_auth_service.dart';
@@ -20,12 +19,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Map<String, dynamic>? _doctor;
   DateTime _selectedDay = DateTime.now();
-  DateTime _focusedDay = DateTime.now();
   List<AppointmentModel> _appointments = [];
   List<DateTime> _appointmentDates = [];
   List<DateTime> _blockedDates = [];
   bool _isLoading = true;
-  bool _isCalendarView = true;
   int _dailyCount = 0;
 
   // Mini calendar days strip
