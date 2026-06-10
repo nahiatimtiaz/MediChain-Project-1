@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../../data/services/doctor_services/doctor_auth_service.dart';
-import '../../../../data/services/doctor_services/schedule_service.dart';
-import '../../../../data/models/doctor_models/appointment_model.dart';
+import '../core/constants/app_constants.dart';
+import '../data/services/doctor_services/doctor_auth_service.dart';
+import '../data/services/doctor_services/schedule_service.dart';
+import '../data/models/doctor_models/appointment_model.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -20,12 +20,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Map<String, dynamic>? _doctor;
   DateTime _selectedDay = DateTime.now();
-  DateTime _focusedDay = DateTime.now();
   List<AppointmentModel> _appointments = [];
   List<DateTime> _appointmentDates = [];
-  List<DateTime> _blockedDates = [];
   bool _isLoading = true;
-  bool _isCalendarView = true;
   int _dailyCount = 0;
 
   // Mini calendar days strip
@@ -52,7 +49,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
 
     final dates = await _scheduleService.getAppointmentDates(doctor['id']);
-    final blocked = await _scheduleService.getBlockedDates(doctor['id']);
     final appointments = await _scheduleService.getAppointmentsByDate(
       doctor['id'],
       _selectedDay,
@@ -65,7 +61,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     setState(() {
       _doctor = doctor;
       _appointmentDates = dates;
-      _blockedDates = blocked;
       _appointments = appointments;
       _dailyCount = count;
       _isLoading = false;
@@ -86,50 +81,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _appointments = appointments;
       _dailyCount = count;
     });
-  }
-
-  Future<void> _toggleBlockDate(DateTime date) async {
-    if (_doctor == null) return;
-    final isBlocked = _blockedDates.any((d) => DateUtils.isSameDay(d, date));
-
-    if (isBlocked) {
-      await _scheduleService.unblockDate(_doctor!['id'], date);
-    } else {
-      final reason = await _showBlockReasonDialog();
-      if (reason != null) {
-        await _scheduleService.blockDate(_doctor!['id'], date, reason);
-      }
-    }
-    _loadData();
-  }
-
-  Future<String?> _showBlockReasonDialog() async {
-    final controller = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Block Date', style: TextStyle(fontWeight: FontWeight.w700)),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'Reason (optional)'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.bluePrimary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Block'),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _updateStatus(AppointmentModel apt, String status) async {
@@ -164,14 +115,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 letterSpacing: 0.8,
                               ),
                             ),
-                            const Text(
-                              'View all →',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.blueMid,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -198,15 +141,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 ),
               ],
             ),
-      bottomNavigationBar: _buildBottomNav(context, 0),
     );
   }
 
   Widget _buildHeader() {
-    final isBlocked = _blockedDates.any(
-      (d) => DateUtils.isSameDay(d, _selectedDay),
-    );
-
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -242,31 +180,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       ),
                     ],
                   ),
-                  GestureDetector(
-                    onTap: () => _toggleBlockDate(_selectedDay),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                      ),
-                      child: Text(
-                        isBlocked ? '🔓 Unblock' : '🚫 Block Date',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
-
               const SizedBox(height: 16),
-
-              // Mini day strip
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: _weekDays.map((day) {
@@ -284,12 +200,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? Colors.white.withValues(alpha: 0.2)
+                              ? Colors.white.withOpacity(0.2)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: isSelected
-                                ? Colors.white.withValues(alpha: 0.4)
+                                ? Colors.white.withOpacity(0.4)
                                 : Colors.transparent,
                             width: 1.5,
                           ),
@@ -330,13 +246,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   );
                 }).toList(),
               ),
-
               const SizedBox(height: 16),
-
-              // Stats
               Row(
                 children: [
-                  _buildStatChip('$_dailyCount/50', 'Total', Colors.white.withValues(alpha: 0.2)),
+                  _buildStatChip('$_dailyCount/50', 'Total', Colors.white.withOpacity(0.2)),
                   const SizedBox(width: 8),
                   _buildStatChip(
                     _appointments.where((a) => a.status == 'Pending').length.toString(),
@@ -365,7 +278,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+          border: Border.all(color: Colors.white.withOpacity(0.15)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,7 +305,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     );
   }
 
-  Widget _buildAppointmentCard(AppointmentModel apt) {
+Widget _buildAppointmentCard(AppointmentModel apt) {
     final isCompleted = apt.status == 'Completed';
     final isPending = apt.status == 'Pending';
 
@@ -405,7 +318,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         border: Border.all(color: AppColors.border, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -484,6 +397,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               ),
               child: Row(
                 children: [
+                  // 1. Complete Button
                   Expanded(
                     child: GestureDetector(
                       onTap: () => _updateStatus(apt, 'Completed'),
@@ -497,7 +411,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           child: Text(
                             '✓ Complete',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: AppColors.primaryText,
                             ),
@@ -507,6 +421,45 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
+
+                  // 2. Add Prescription Shortcut (Fixed Syntax, Colors & Model Mapping)
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => context.push(
+                        '/doctor-prescription',
+                        extra: {
+                          'doctor_id': _doctor?['id'],
+                          'patient_id': apt.patientId,      // Modified from map syntax to model getters
+                          'appointment_id': apt.id,         // Modified from map syntax to model getters
+                        },
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 9),
+                        decoration: BoxDecoration(
+                          color: AppColors.bluePrimary,     // Switched text contrast base safely to dark blue primary
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add, color: Color.fromARGB(255, 153, 32, 32), size: 14),
+                            SizedBox(width: 4),
+                            Text(
+                              'Prescribe',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // 3. Cancel Button
                   Expanded(
                     child: GestureDetector(
                       onTap: () => _updateStatus(apt, 'Cancelled'),
@@ -520,7 +473,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           child: Text(
                             '✕ Cancel',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: AppColors.redText,
                             ),
@@ -537,39 +490,4 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       ),
     );
   }
-}
-
-Widget _buildBottomNav(BuildContext context, int currentIndex) {
-  return Container(
-    decoration: const BoxDecoration(
-      color: Colors.white,
-      border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
-    ),
-    child: SafeArea(
-      top: false,
-      child: BottomNavigationBar(
-        currentIndex: currentIndex,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        selectedItemColor: AppColors.bluePrimary,
-        unselectedItemColor: AppColors.textTertiary,
-        selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
-        unselectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
-        onTap: (index) {
-          if (index == 0) context.go('/doctor-schedule');
-          if (index == 1) context.go('/doctor-patients');
-          if (index == 2) context.go('/doctor-notifications');
-          if (index == 3) context.go('/doctor-profile');
-          if (index == 4) context.go('/doctor-community');
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), activeIcon: Icon(Icons.calendar_today), label: 'Schedule'),
-          BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'Patients'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined), activeIcon: Icon(Icons.notifications), label: 'Alerts'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
-          BottomNavigationBarItem(icon: Icon(Icons.groups), activeIcon: Icon(Icons.groups), label: 'Community'),
-        ],
-      ),
-    ),
-  );
 }

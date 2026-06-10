@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:medichain/data/services/doctor_service.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../../core/utils/validators.dart';
-import '../../../../data/services/doctor_services/doctor_auth_service.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/utils/validators.dart';
+import '../../data/services/doctor_services/doctor_auth_service.dart';
 
 class DoctorProfileScreen extends StatefulWidget {
   const DoctorProfileScreen({super.key});
@@ -143,7 +143,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 ),
               ],
             ),
-      bottomNavigationBar: _buildBottomNav(context, 3),
+      //bottomNavigationBar: _buildBottomNav(context, 3),
     );
   }
 
@@ -518,59 +518,4 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       ),
     );
   }
-}
-
-Widget _buildBottomNav(BuildContext context, int currentIndex) {
-  return Container(
-    decoration: const BoxDecoration(
-      color: Colors.white,
-      border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
-    ),
-    child: SafeArea(
-      top: false,
-      child: BottomNavigationBar(
-        currentIndex: currentIndex,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        selectedItemColor: AppColors.bluePrimary,
-        unselectedItemColor: AppColors.textTertiary,
-        selectedLabelStyle: const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-        ),
-        onTap: (index) {
-          if (index == 0) context.go('/doctor-schedule');
-          if (index == 1) context.go('/doctor-patients');
-          if (index == 2) context.go('/doctor-notifications');
-          if (index == 3) context.go('/doctor-profile');
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            activeIcon: Icon(Icons.calendar_today),
-            label: 'Schedule',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people_outline),
-            activeIcon: Icon(Icons.people),
-            label: 'Patients',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_outlined),
-            activeIcon: Icon(Icons.notifications),
-            label: 'Alerts',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-      ),
-    ),
-  );
 }

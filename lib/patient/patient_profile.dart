@@ -33,6 +33,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
   File? _selectedImage;
   bool _isLoading = true;
   bool _isSavingProfile = false;
+  bool _isImageDeleted = false;
   bool _isSavingPassword = false;
   bool _currentPassVisible = false;
   bool _newPassVisible = false;
@@ -72,6 +73,54 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     }
   }
 
+  void _showImageSourceOptions(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      final hasImage = _selectedImage != null || 
+          (_patientData?['profile_image_url'] != null && !_isImageDeleted);
+
+      return SafeArea(
+        child: Wrap(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'Profile Photo',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: Colors.blue),
+              title: const Text('Upload from Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage();
+                setState(() => _isImageDeleted = false);
+              },
+            ),
+            if (hasImage)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text('Remove Current Photo', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    _selectedImage = null;
+                    _isImageDeleted = true;
+                  });
+                },
+              ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(
@@ -81,7 +130,10 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
       imageQuality: 80,
     );
     if (picked != null) {
-      setState(() => _selectedImage = File(picked.path));
+      setState(() {
+        _selectedImage = File(picked.path);
+        _isImageDeleted = false; // Reset delete flag if they pick a new image
+      });
     }
   }
 
@@ -93,13 +145,14 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
       final userId = _supabase.auth.currentUser!.id;
       String? imageUrl = _patientData?['profile_image_url'];
 
-      if (_selectedImage != null) {
-        // Safe check: Assumes you have a dynamic target or dedicated method for patient uploads
-        imageUrl = await _storageService.uploadPatientImage(
-          _selectedImage!,
-          userId,
-        );
-      }
+      if (_isImageDeleted) {
+      imageUrl = null; // Reset if they hit delete
+    } else if (_selectedImage != null) {
+      imageUrl = await _storageService.uploadPatientImage(
+        _selectedImage!,
+        userId,
+      );
+    }
 
       await _supabase
           .from('patients')
@@ -109,6 +162,11 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
             'profile_image_url': imageUrl,
           })
           .eq('id', userId);
+
+          setState(() {
+      _selectedImage = null;
+      _isImageDeleted = false;
+    });
 
       await _loadPatientProfile();
       
@@ -196,106 +254,113 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    final fullName = _patientData?['full_name'] ?? 'Patient';
-    final patientId = _patientData?['patient_id'] ?? 'PAT------';
-    
-    final initials = fullName.split(' ')
-            .take(2)
-            .map((w) => w.isNotEmpty ? w[0].toUpperCase() : '')
-            .join() ?? 'P';
+Widget _buildHeader() {
+  final fullName = _patientData?['full_name'] ?? 'Patient';
+  final patientId = _patientData?['patient_id'] ?? 'PAT------';
+  
+  final initials = fullName.split(' ')
+      .take(2)
+      .map((w) => w.isNotEmpty ? w[0].toUpperCase() : '')
+      .join() ?? 'P';
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.blue], // Standard medical blue styling
-        ),
+  // Determine what image source to display based on current user actions
+// Find this block in your _buildHeader method and update it:
+ImageProvider? avatarImage;
+if (!_isImageDeleted) {
+  if (_selectedImage != null && _selectedImage!.path.isNotEmpty) {
+    // Checking if the file actually exists on the disk space before rendering
+    avatarImage = FileImage(File(_selectedImage!.path));
+  } else if (_patientData?['profile_image_url'] != null && 
+             _patientData?['profile_image_url'].toString().trim().isNotEmpty == true) {
+    avatarImage = NetworkImage(_patientData?['profile_image_url']);
+  }
+}
+
+  return Container(
+    width: double.infinity,
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color.fromARGB(255, 114, 169, 213), Color.fromARGB(255, 166, 202, 219)],
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(51),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.white.withAlpha(76),
-                          width: 3,
-                        ),
-                        image: _selectedImage != null
-                            ? DecorationImage(
-                                image: FileImage(_selectedImage!),
-                                fit: BoxFit.cover,
-                              )
-                            : _patientData?['profile_image_url'] != null
-                                ? DecorationImage(
-                                    image: NetworkImage(_patientData?['profile_image_url']),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
-                      ),
-                      child: (_selectedImage == null && _patientData?['profile_image_url'] == null)
-                          ? Center(
-                              child: Text(
+    ),
+    child: SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: () => _showImageSourceOptions(context),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Outer white ring border
+                  Container(
+                    width: 86,
+                    height: 86,
+                    decoration: const BoxDecoration(
+                      color: Colors.white24, // Semitransparent white
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      // Main Profile Avatar Circle
+                      child: CircleAvatar(
+                        radius: 40,
+                        backgroundColor: Colors.white, // White fallback background
+                        backgroundImage: avatarImage,
+                        child: avatarImage == null
+                            ? Text(
                                 initials,
                                 style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
+                                  color: Colors.blue, // Blue initials text
+                                  fontSize: 26,
                                   fontWeight: FontWeight.w800,
                                 ),
-                              ),
-                            )
-                          : null,
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        width: 22,
-                        height: 22,
-                        decoration: BoxDecoration(
-                          color: Colors.blueAccent,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: const Icon(Icons.camera_alt, size: 10, color: Colors.white),
+                              )
+                            : null,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  // Edit Badge Icon overlay
+                  Positioned(
+                    bottom: 0,
+                    right: 4,
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        color: Colors.blueAccent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: const Icon(Icons.edit, size: 12, color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                fullName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              fullName,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
               ),
-              const SizedBox(height: 4),
-              Text(
-                'ID: $patientId',
-                style: const TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 0.5),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'ID: $patientId',
+              style: const TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 0.5),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildProfileCard() {
     return Container(

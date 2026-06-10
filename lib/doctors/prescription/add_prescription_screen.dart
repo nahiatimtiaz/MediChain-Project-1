@@ -1,10 +1,12 @@
+
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../../data/models/doctor_models/prescription_model.dart';
-import '../../../../data/services/doctor_services/prescription_service.dart';
+import '../../core/constants/app_constants.dart';
+import '../../data/models/doctor_models/prescription_model.dart';
+import '../../data/services/doctor_services/prescription_service.dart';
 
 class AddPrescriptionScreen extends StatefulWidget {
   final Map<String, dynamic> extra;
@@ -67,15 +69,15 @@ class _AddPrescriptionScreenState extends State<AddPrescriptionScreen> {
     }
   }
 
-  Future<void> _pickFollowUpDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 7)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (date != null) setState(() => _followUpDate = date);
-  }
+  // Future<void> _pickFollowUpDate() async {
+  //   final date = await showDatePicker(
+  //     context: context,
+  //     initialDate: DateTime.now().add(const Duration(days: 7)),
+  //     firstDate: DateTime.now(),
+  //     lastDate: DateTime.now().add(const Duration(days: 365)),
+  //   );
+  //   if (date != null) setState(() => _followUpDate = date);
+  // }
 
   Future<void> _savePrescription() async {
     if (_diagnosisController.text.trim().isEmpty) {
@@ -275,36 +277,36 @@ class _AddPrescriptionScreenState extends State<AddPrescriptionScreen> {
             const SizedBox(height: 20),
 
             // Follow up date
-            _buildLabel('Follow Up Date'),
-            InkWell(
-              onTap: _pickFollowUpDate,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today,
-                        color: AppColors.textSecondary, size: 18),
-                    const SizedBox(width: 8),
-                    Text(
-                      _followUpDate != null
-                          ? DateFormat('MMM d, yyyy').format(_followUpDate!)
-                          : 'Select follow up date',
-                      style: TextStyle(
-                        color: _followUpDate != null
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            // _buildLabel('Follow Up Date'),
+            // InkWell(
+            //   onTap: _pickFollowUpDate,
+            //   child: Container(
+            //     width: double.infinity,
+            //     padding: const EdgeInsets.all(14),
+            //     decoration: BoxDecoration(
+            //       color: Colors.white,
+            //       borderRadius: BorderRadius.circular(8),
+            //       border: Border.all(color: AppColors.border),
+            //     ),
+            //     child: Row(
+            //       children: [
+            //         Icon(Icons.calendar_today,
+            //             color: AppColors.textSecondary, size: 18),
+            //         const SizedBox(width: 8),
+            //         // Text(
+            //         //   _followUpDate != null
+            //         //       ? DateFormat('MMM d, yyyy').format(_followUpDate!)
+            //         //       : 'Select follow up date',
+            //         //   style: TextStyle(
+            //         //     color: _followUpDate != null
+            //         //         ? AppColors.textPrimary
+            //         //         : AppColors.textSecondary,
+            //         //   ),
+            //         // ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
 
             const SizedBox(height: 20),
 

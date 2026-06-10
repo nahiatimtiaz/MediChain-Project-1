@@ -149,12 +149,12 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
         ? (widget.doctor!.doctorId ?? '')
         : 'DOC-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
 
-    // Automatically generate segmented slots array based on time configuration choices
-    List<String> dynamicGeneratedSlots = _generateTimeSlots(
-      _startTime!,
-      _endTime!,
-      _selectedSlotDuration,
-    );
+    // // Automatically generate segmented slots array based on time configuration choices
+    // List<String> dynamicGeneratedSlots = _generateTimeSlots(
+    //   _startTime!,
+    //   _endTime!,
+    //   _selectedSlotDuration,
+    // );
 
     final doctor = DoctorModel(
       id: widget.doctor?.id,
@@ -169,6 +169,7 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
       availableDays: _selectedDays,
       startTime: _startTimeController.text.trim(),
       endTime: _endTimeController.text.trim(),
+      //timeSlots: dynamicGeneratedSlots,
       maxPatientsPerDay: widget.doctor?.maxPatientsPerDay ?? 50,
       profileImageUrl: imageUrl,
       accountStatus: true,
@@ -361,51 +362,51 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
               ),
               const SizedBox(height: 16),
 
-              // --- Start & End Time ---
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Start Time *'),
-                        TextFormField(
-                          controller: _startTimeController,
-                          readOnly: true,
-                          onTap: () =>
-                              _selectTime(context, _startTimeController),
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Required' : null,
-                          decoration: const InputDecoration(
-                            hintText: '03:00 PM',
-                            suffixIcon: Icon(Icons.access_time),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('End Time *'),
-                        TextFormField(
-                          controller: _endTimeController,
-                          readOnly: true,
-                          onTap: () => _selectTime(context, _endTimeController),
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Required' : null,
-                          decoration: const InputDecoration(
-                            hintText: '07:00 PM',
-                            suffixIcon: Icon(Icons.access_time),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              // // --- Start & End Time ---
+              // Row(
+              //   children: [
+              //     Expanded(
+              //       child: Column(
+              //         crossAxisAlignment: CrossAxisAlignment.start,
+              //         children: [
+              //           _buildLabel('Start Time *'),
+              //           TextFormField(
+              //             controller: _startTimeController,
+              //             readOnly: true,
+              //             onTap: () =>
+              //                 _selectTime(context, _startTimeController),
+              //             validator: (v) =>
+              //                 v == null || v.isEmpty ? 'Required' : null,
+              //             decoration: const InputDecoration(
+              //               hintText: '03:00 PM',
+              //               suffixIcon: Icon(Icons.access_time),
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //     const SizedBox(width: 16),
+              //     Expanded(
+              //       child: Column(
+              //         crossAxisAlignment: CrossAxisAlignment.start,
+              //         children: [
+              //           _buildLabel('End Time *'),
+              //           TextFormField(
+              //             controller: _endTimeController,
+              //             readOnly: true,
+              //             onTap: () => _selectTime(context, _endTimeController),
+              //             validator: (v) =>
+              //                 v == null || v.isEmpty ? 'Required' : null,
+              //             decoration: const InputDecoration(
+              //               hintText: '07:00 PM',
+              //               suffixIcon: Icon(Icons.access_time),
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //   ],
+              // ),
               const SizedBox(height: 16),
 
               _buildLabel('Consultation Fee (৳) *'),

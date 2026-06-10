@@ -164,7 +164,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                 ),
               ],
             ),
-      bottomNavigationBar: _buildBottomNav(context, 2),
+      //bottomNavigationBar: _buildBottomNav(context, 3),
     );
   }
 
@@ -464,33 +464,35 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
   }
 }
 
-Widget _buildBottomNav(BuildContext context, int currentIndex) {
-  return Container(
-    decoration: const BoxDecoration(
-      color: Colors.white,
-      border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
-    ),
-    child: SafeArea(
-      top: false,
-      child: BottomNavigationBar(
-        currentIndex: currentIndex,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textTertiary,
-        selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
-        unselectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
-        onTap: (index) {
-          if (index == 0) context.go('/dashboard');
-          if (index == 1) context.go('/doctors');
-          if (index == 2) context.go('/profile');
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'Doctors'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), activeIcon: Icon(Icons.settings), label: 'Profile'),
-        ],
-      ),
-    ),
-  );
-}
+// Widget _buildBottomNav(BuildContext context, int currentIndex) {
+//   return Container(
+//     decoration: const BoxDecoration(
+//       color: Colors.white,
+//       border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
+//     ),
+//     child: SafeArea(
+//       top: false,
+//       child: BottomNavigationBar(
+//         currentIndex: currentIndex,
+//         backgroundColor: Colors.transparent,
+//         elevation: 0,
+//         selectedItemColor: AppColors.primary,
+//         unselectedItemColor: AppColors.textTertiary,
+//         selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+//         unselectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+//         onTap: (index) {
+//           if (index == 0) context.go('/dashboard');
+//           if (index == 1) context.go('/doctors');
+//           if (index == 2) context.go('/admin-blog');
+//           if (index == 3) context.go('/profile');
+//         },
+//         items: const [
+//           BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
+//           BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'Doctors'),
+//           BottomNavigationBarItem(icon: Icon(Icons.forum_outlined), activeIcon: Icon(Icons.forum), label: 'Admin Blog'),
+//           BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
+//         ],
+//       ),
+//     ),
+//   );
+// }

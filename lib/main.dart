@@ -34,19 +34,4 @@ class MyApp extends StatelessWidget {
       routerConfig: AppRouter.router,
     );
   }
-//   Widget build(BuildContext context) {
-// <<<<<<< HEAD
-//     return MaterialApp(
-// =======
-//     return MaterialApp.router(
-//       title: 'MediChain',
-// >>>>>>> 7c250126f776169990aee745affc3e552e434436
-//       debugShowCheckedModeBanner: false,
-//       theme: AppTheme.lightTheme,
-//       home: ChoicePage(), 
-//       //home: HomePage(),
-  
-
-//     );
-//   }
 }
