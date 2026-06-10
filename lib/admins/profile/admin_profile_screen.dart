@@ -2,11 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/utils/validators.dart';
-import '../../../data/models/admin_model.dart';
-import '../../../data/services/auth_service.dart';
-import '../../../data/services/storage_service.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/utils/validators.dart';
+import '../../data/models/admin_model.dart';
+import '../../data/services/auth_service.dart';
+import '../../data/services/storage_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AdminProfileScreen extends StatefulWidget {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../../data/models/doctor_models/appointment_model.dart';
-import '../../../../data/services/doctor_services/schedule_service.dart';
+import '../core/constants/app_constants.dart';
+import '../data/models/doctor_models/appointment_model.dart';
+import '../data/services/doctor_services/schedule_service.dart';
 
 class AppointmentDetailScreen extends StatefulWidget {
   final AppointmentModel appointment;

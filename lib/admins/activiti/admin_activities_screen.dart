@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../core/constants/app_constants.dart';
 
 class AdminActivitiesScreen extends StatefulWidget {
   const AdminActivitiesScreen({super.key});

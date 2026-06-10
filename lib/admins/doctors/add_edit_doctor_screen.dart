@@ -2,11 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/utils/validators.dart';
-import '../../../data/models/doctor_model.dart';
-import '../../../data/services/doctor_service.dart';
-import '../../../data/services/storage_service.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/utils/validators.dart';
+import '../../data/models/doctor_model.dart';
+import '../../data/services/doctor_service.dart';
+import '../../data/services/storage_service.dart';
 
 class AddEditDoctorScreen extends StatefulWidget {
   final DoctorModel? doctor;

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../../data/services/doctor_services/doctor_auth_service.dart';
-import '../../../../data/services/doctor_services/notification_service.dart';
+import '../../core/constants/app_constants.dart';
+import '../../data/services/doctor_services/doctor_auth_service.dart';
+import '../../data/services/doctor_services/notification_service.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});

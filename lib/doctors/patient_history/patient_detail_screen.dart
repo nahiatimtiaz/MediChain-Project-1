@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../../data/services/doctor_services/doctor_auth_service.dart';
-import '../../../../data/services/doctor_services/prescription_service.dart';
-import '../../../../data/models/doctor_models/prescription_model.dart';
-import '../../../../data/models/doctor_models/medical_report_model.dart';
-import '../../../../data/models/doctor_models/patient_model.dart';
+import '../../core/constants/app_constants.dart';
+import '../../data/services/doctor_services/doctor_auth_service.dart';
+import '../../data/services/doctor_services/prescription_service.dart';
+import '../../data/models/doctor_models/prescription_model.dart';
+import '../../data/models/doctor_models/medical_report_model.dart';
+import '../../data/models/doctor_models/patient_model.dart';
 
 class PatientDetailScreen extends StatefulWidget {
   final String patientId;

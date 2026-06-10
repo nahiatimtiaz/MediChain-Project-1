@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:medichain/data/services/auth_service.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../data/services/doctor_service.dart';
-import '../../../data/models/doctor_model.dart';
+import '../../core/constants/app_constants.dart';
+import '../../data/services/doctor_service.dart';
+import '../../data/models/doctor_model.dart';
 
 class DoctorListScreen extends StatefulWidget {
   const DoctorListScreen({super.key});

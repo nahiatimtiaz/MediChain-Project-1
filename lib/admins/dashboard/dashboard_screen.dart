@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../data/services/auth_service.dart';
-import '../../../data/services/doctor_service.dart';
-import '../../../data/models/admin_model.dart';
+import '../../core/constants/app_constants.dart';
+import '../../data/services/auth_service.dart';
+import '../../data/services/doctor_service.dart';
+import '../../data/models/admin_model.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
