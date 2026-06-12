@@ -14,7 +14,6 @@ import '../doctors/schedule_screen.dart';
 import '../doctors/appointment_detail_screen.dart';
 import '../doctors/patient_history/patient_search_screen.dart';
 import '../doctors/patient_history/patient_detail_screen.dart';
-import '../doctors/prescription/add_prescription_screen.dart';
 import '../doctors/profile/doctor_profile_screen.dart';
 import '../doctors/notifications/notification_screen.dart';
 import '../data/models/doctor_models/appointment_model.dart';
@@ -28,7 +27,7 @@ import 'package:flutter/material.dart';
 
 class AppRouter {
   static final router = GoRouter(
-    initialLocation: '/', 
+    initialLocation: '/',
     routes: [
       // Entry Screen
       GoRoute(path: '/', builder: (context, state) => const EntryScreen()),
@@ -37,17 +36,13 @@ class AppRouter {
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/dashboard',
-        builder: (context, state) => const AdminBottomNav(
-          currentIndex: 0,
-          child: DashboardScreen(),
-        ),
+        builder: (context, state) =>
+            const AdminBottomNav(currentIndex: 0, child: DashboardScreen()),
       ),
       GoRoute(
         path: '/doctors',
-        builder: (context, state) => const AdminBottomNav(
-          currentIndex: 1,
-          child: DoctorListScreen(),
-        ),
+        builder: (context, state) =>
+            const AdminBottomNav(currentIndex: 1, child: DoctorListScreen()),
       ),
       GoRoute(
         path: '/admin-blog',
@@ -56,28 +51,34 @@ class AppRouter {
           child: CommunityPage(isPinnedInShell: true),
         ),
       ),
-      GoRoute(path: '/doctors/add', builder: (context, state) => const AddEditDoctorScreen()),
-      GoRoute(path: '/doctors/edit', builder: (context, state) => AddEditDoctorScreen(doctor: state.extra as dynamic)),
+      GoRoute(
+        path: '/doctors/add',
+        builder: (context, state) => const AddEditDoctorScreen(),
+      ),
+      GoRoute(
+        path: '/doctors/edit',
+        builder: (context, state) =>
+            AddEditDoctorScreen(doctor: state.extra as dynamic),
+      ),
       GoRoute(
         path: '/profile',
-        builder: (context, state) => const AdminBottomNav(
-          currentIndex: 3,
-          child: AdminProfileScreen(),
-        ),
+        builder: (context, state) =>
+            const AdminBottomNav(currentIndex: 3, child: AdminProfileScreen()),
       ),
-      GoRoute(path: '/admin-activities', builder: (context, state) => const AdminActivitiesScreen()),
+      GoRoute(
+        path: '/admin-activities',
+        builder: (context, state) => const AdminActivitiesScreen(),
+      ),
 
-      // Doctor Panel Routes 
+      // Doctor Panel Routes
       GoRoute(
         path: '/doctor-login',
         builder: (context, state) => const DoctorLoginScreen(),
       ),
       GoRoute(
         path: '/doctor-schedule',
-        builder: (context, state) => const DoctorMainLayout(
-          currentIndex: 0,
-          child: ScheduleScreen(),
-        ),
+        builder: (context, state) =>
+            const DoctorMainLayout(currentIndex: 0, child: ScheduleScreen()),
       ),
       GoRoute(
         path: '/doctor-appointment-detail',
@@ -94,18 +95,10 @@ class AppRouter {
       ),
       GoRoute(
         path: '/doctor-patient-detail',
-        builder: (context, state) => PatientDetailScreen(patientId: state.extra as String),
+        builder: (context, state) =>
+            PatientDetailScreen(patientId: state.extra as String),
       ),
 
-      GoRoute(
-  path: '/doctor-prescription',
-  builder: (context, state) {
-    // Safely cast or fallback to an empty map instead of crashing out with a null type error
-    final args = state.extra as Map<String, dynamic>? ?? {};
-    return AddPrescriptionScreen(extra: args);
-  },
-),
-      
       GoRoute(
         path: '/doctor-blog',
         builder: (context, state) => const DoctorMainLayout(
@@ -122,16 +115,31 @@ class AppRouter {
       ),
 
       // Patient Routes
-      GoRoute(path: '/patient-reg', builder: (context, state) => const PatientRegistrationScreen()),
-      GoRoute(path: '/patient-login', builder: (context, state) => const PatientLoginScreen()),
-      GoRoute(path: '/patient-home-page', builder: (context, state) => const HomePage()),
-      GoRoute(path: '/doctor-search-page', builder: (context, state) => const DoctorSearchPage()),
-      GoRoute(path: '/patient-history', builder: (context, state) => const PatientHistoryPage()),
-      
+      GoRoute(
+        path: '/patient-reg',
+        builder: (context, state) => const PatientRegistrationScreen(),
+      ),
+      GoRoute(
+        path: '/patient-login',
+        builder: (context, state) => const PatientLoginScreen(),
+      ),
+      GoRoute(
+        path: '/patient-home-page',
+        builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: '/doctor-search-page',
+        builder: (context, state) => const DoctorSearchPage(),
+      ),
+      GoRoute(
+        path: '/patient-history',
+        builder: (context, state) => const PatientHistoryPage(),
+      ),
+
       // Patient Blog Only (Admin Blog handled above in the Admin segment safely)
       GoRoute(
         path: '/patient-blog',
-        builder: (context, state) => const CommunityPage(), 
+        builder: (context, state) => const CommunityPage(),
       ),
     ],
   );
@@ -139,7 +147,7 @@ class AppRouter {
 
 // class AppRouter {
 //   static final router = GoRouter(
-//     initialLocation: '/', 
+//     initialLocation: '/',
 //     routes: [
 //       // Entry Screen
 //       GoRoute(path: '/', builder: (context, state) => const EntryScreen()),

@@ -64,23 +64,6 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
         title: const Text('Patient History'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        actions: [
-          // Add prescription button
-          TextButton.icon(
-            onPressed: () => context.go(
-              '/doctor-prescription',
-              extra: {
-                'doctor_id': _doctor?['id'],
-                'patient_id': widget.patientId,
-              },
-            ),
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text(
-              'Add Prescription',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
