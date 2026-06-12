@@ -25,13 +25,16 @@ import '../patient/home_page.dart';
 import '../patient/patient_history.dart';
 import '../patient/patient_reg.dart';
 import 'package:flutter/material.dart';
+import '../splash_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
     initialLocation: '/',
     routes: [
-      // Entry Screen
-      GoRoute(path: '/', builder: (context, state) => const EntryScreen()),
+      // Splash Screen
+      GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
+
+      GoRoute(path: '/entry', builder: (context, state) => const EntryScreen()),
 
       // Admin Routes
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),

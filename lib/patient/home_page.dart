@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    // FIX: Safely remove active overlay dropdown elements to prevent screen ghosting
+    //Safely remove active overlay dropdown elements to prevent screen ghosting
     _closeNotificationOverlay();
     
     fullNameController.dispose();
