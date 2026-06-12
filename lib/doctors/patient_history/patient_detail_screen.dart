@@ -24,7 +24,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
   Map<String, dynamic>? _doctor;
   PatientModel? _patient;
   List<PrescriptionModel> _prescriptions = [];
-  List<MedicalReportModel> _reports = [];
+  //List<MedicalReportModel> _reports = [];
   bool _isLoading = true;
 
   @override
@@ -34,24 +34,35 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
     final doctor = await _authService.getCurrentDoctor();
+
+    if (!mounted) return;
+
     if (doctor == null) {
-      if (mounted) context.go('/doctor-login');
+      context.go('/doctor-login');
       return;
     }
 
-    // Load patient, prescriptions and reports
     final prescriptions = await _prescriptionService.getPatientPrescriptions(
       widget.patientId,
     );
-    final reports = await _prescriptionService.getPatientReports(
-      widget.patientId,
-    );
+
+    // final reports = await _prescriptionService.getPatientReports(
+    //   widget.patientId,
+    // );
+
+    if (!mounted) return;
 
     setState(() {
       _doctor = doctor;
       _prescriptions = prescriptions;
-      _reports = reports;
+      //_reports = reports;
       _isLoading = false;
     });
   }
@@ -64,6 +75,40 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
         title: const Text('Patient History'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        // Added leading icon to navigate back correctly
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/doctor-patients');
+            }
+          },
+        ),
+        actions: [
+          // Add prescription button
+          TextButton.icon(
+            onPressed: () async {
+              await context.push(
+                '/doctor-prescription',
+                extra: {
+                  'doctor_id': _doctor?['id'],
+                  'patient_id': widget.patientId,
+                },
+              );
+
+              if (mounted) {
+                await _loadData();
+              }
+            },
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: const Text(
+              'Add Prescription',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -87,16 +132,16 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
                   const SizedBox(height: 24),
 
                   // Reports Section
-                  _buildSectionTitle('Medical Reports', _reports.length),
-                  const SizedBox(height: 16),
+                  // _buildSectionTitle('Medical Reports', _reports.length),
+                  // const SizedBox(height: 16),
 
-                  _reports.isEmpty
-                      ? _buildEmptyCard('No reports found')
-                      : Column(
-                          children: _reports
-                              .map((r) => _buildReportCard(r))
-                              .toList(),
-                        ),
+                  // _reports.isEmpty
+                  //     ? _buildEmptyCard('No reports found')
+                  //     : Column(
+                  //         children: _reports
+                  //             .map((r) => _buildReportCard(r))
+                  //             .toList(),
+                  //       ),
                 ],
               ),
             ),
@@ -208,21 +253,6 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
             Text(
               'Notes: ${prescription.notes}',
               style: TextStyle(color: AppColors.textSecondary),
-            ),
-          ],
-
-          // Follow up date
-          if (prescription.followUpDate != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.event, size: 16, color: AppColors.warning),
-                const SizedBox(width: 6),
-                Text(
-                  'Follow up: ${DateFormat('MMM d, yyyy').format(prescription.followUpDate!)}',
-                  style: TextStyle(color: AppColors.warning),
-                ),
-              ],
             ),
           ],
         ],

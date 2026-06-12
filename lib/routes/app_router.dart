@@ -15,6 +15,7 @@ import '../doctors/appointment_detail_screen.dart';
 import '../doctors/patient_history/patient_search_screen.dart';
 import '../doctors/patient_history/patient_detail_screen.dart';
 import '../doctors/profile/doctor_profile_screen.dart';
+import '../doctors/prescription/add_prescription_screen.dart';
 import '../doctors/notifications/notification_screen.dart';
 import '../data/models/doctor_models/appointment_model.dart';
 import '../doctors/bottom_nav_w/bottom_nav.dart';
@@ -97,6 +98,14 @@ class AppRouter {
         path: '/doctor-patient-detail',
         builder: (context, state) =>
             PatientDetailScreen(patientId: state.extra as String),
+      ),
+      GoRoute(
+        path: '/doctor-prescription',
+        builder: (context, state) {
+          // Safely cast or fallback to an empty map instead of crashing out with a null type error
+          final args = state.extra as Map<String, dynamic>? ?? {};
+          return AddPrescriptionScreen(extra: args);
+        },
       ),
 
       GoRoute(
