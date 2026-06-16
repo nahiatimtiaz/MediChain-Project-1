@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-// import '../../../core/constants/app_constants.dart'; 
 import '../../../core/utils/validators.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/storage_service.dart';
@@ -49,7 +48,6 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     try {
       final user = _supabase.auth.currentUser;
       if (user != null) {
-        // Fetching patient metadata from your 'patients' table
         final data = await _supabase
             .from('patients')
             .select()
@@ -74,52 +72,52 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
   }
 
   void _showImageSourceOptions(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) {
-      final hasImage = _selectedImage != null || 
-          (_patientData?['profile_image_url'] != null && !_isImageDeleted);
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        final hasImage = _selectedImage != null || 
+            (_patientData?['profile_image_url'] != null && !_isImageDeleted);
 
-      return SafeArea(
-        child: Wrap(
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Profile Photo',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        return SafeArea(
+          child: Wrap(
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Profile Photo',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library, color: Colors.blue),
-              title: const Text('Upload from Gallery'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage();
-                setState(() => _isImageDeleted = false);
-              },
-            ),
-            if (hasImage)
               ListTile(
-                leading: const Icon(Icons.delete_outline, color: Colors.red),
-                title: const Text('Remove Current Photo', style: TextStyle(color: Colors.red)),
+                leading: const Icon(Icons.photo_library, color: Colors.blue),
+                title: const Text('Upload from Gallery'),
                 onTap: () {
                   Navigator.pop(context);
-                  setState(() {
-                    _selectedImage = null;
-                    _isImageDeleted = true;
-                  });
+                  _pickImage();
+                  setState(() => _isImageDeleted = false);
                 },
               ),
-          ],
-        ),
-      );
-    },
-  );
-}
+              if (hasImage)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Colors.red),
+                  title: const Text('Remove Current Photo', style: TextStyle(color: Colors.red)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _selectedImage = null;
+                      _isImageDeleted = true;
+                    });
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -132,7 +130,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     if (picked != null) {
       setState(() {
         _selectedImage = File(picked.path);
-        _isImageDeleted = false; // Reset delete flag if they pick a new image
+        _isImageDeleted = false;
       });
     }
   }
@@ -146,13 +144,13 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
       String? imageUrl = _patientData?['profile_image_url'];
 
       if (_isImageDeleted) {
-      imageUrl = null; // Reset if they hit delete
-    } else if (_selectedImage != null) {
-      imageUrl = await _storageService.uploadPatientImage(
-        _selectedImage!,
-        userId,
-      );
-    }
+        imageUrl = null;
+      } else if (_selectedImage != null) {
+        imageUrl = await _storageService.uploadPatientImage(
+          _selectedImage!,
+          userId,
+        );
+      }
 
       await _supabase
           .from('patients')
@@ -163,10 +161,10 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
           })
           .eq('id', userId);
 
-          setState(() {
-      _selectedImage = null;
-      _isImageDeleted = false;
-    });
+      setState(() {
+        _selectedImage = null;
+        _isImageDeleted = false;
+      });
 
       await _loadPatientProfile();
       
@@ -186,34 +184,61 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     }
   }
 
-  Future<void> _changePassword() async {
-    if (!_passwordFormKey.currentState!.validate()) return;
-    setState(() => _isSavingPassword = true);
+Future<void> _changePassword() async {
+  if (!_passwordFormKey.currentState!.validate()) return;
+  setState(() => _isSavingPassword = true);
 
-    try {
-      await _supabase.auth.updateUser(
-        UserAttributes(password: _newPasswordController.text),
-      );
-
-      _currentPasswordController.clear();
-      _newPasswordController.clear();
-      _confirmPasswordController.clear();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password changed successfully')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to change password'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      setState(() => _isSavingPassword = false);
+  try {
+    final email = _supabase.auth.currentUser?.email;
+    
+    if (email == null) {
+      throw Exception("User email not found.");
     }
+
+    // Step 1: Verify the current password by attempting a silent re-login check
+    await _supabase.auth.signInWithPassword(
+      email: email,
+      password: _currentPasswordController.text.trim(),
+    );
+
+    // Step 2: If the sign-in doesn't throw an error, it means the current password is correct.
+    // Proceed to update the password safely.
+    await _supabase.auth.updateUser(
+      UserAttributes(password: _newPasswordController.text.trim()),
+    );
+
+    // Clear forms cleanly on success
+    _currentPasswordController.clear();
+    _newPasswordController.clear();
+    _confirmPasswordController.clear();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password changed successfully')),
+      );
+    }
+  } on AuthException catch (authError) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          // Handle wrong password/credentials error explicitly
+          content: Text(authError.message.contains('invalid') || authError.message.contains('credentials')
+              ? 'Incorrect current password. Please try again.'
+              : authError.message), 
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to change password'), backgroundColor: Colors.red),
+      );
+    }
+  } finally {
+    setState(() => _isSavingPassword = false);
   }
+}
 
   @override
   void dispose() {
@@ -228,7 +253,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50], // Adjusted background tone for a cleaner client visual
+      backgroundColor: Colors.grey[50], 
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.blue))
           : CustomScrollView(
@@ -250,117 +275,110 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                 ),
               ],
             ),
-      //bottomNavigationBar: _buildBottomNav(context, 2),
     );
   }
 
-Widget _buildHeader() {
-  final fullName = _patientData?['full_name'] ?? 'Patient';
-  final patientId = _patientData?['patient_id'] ?? 'PAT------';
-  
-  final initials = fullName.split(' ')
-      .take(2)
-      .map((w) => w.isNotEmpty ? w[0].toUpperCase() : '')
-      .join() ?? 'P';
+  Widget _buildHeader() {
+    final fullName = _patientData?['full_name'] ?? 'Patient';
+    final patientId = _patientData?['patient_id'] ?? 'PAT------';
+    
+    final initials = fullName.split(' ')
+        .take(2)
+        .map((w) => w.isNotEmpty ? w[0].toUpperCase() : '')
+        .join();
 
-  // Determine what image source to display based on current user actions
-// Find this block in your _buildHeader method and update it:
-ImageProvider? avatarImage;
-if (!_isImageDeleted) {
-  if (_selectedImage != null && _selectedImage!.path.isNotEmpty) {
-    // Checking if the file actually exists on the disk space before rendering
-    avatarImage = FileImage(File(_selectedImage!.path));
-  } else if (_patientData?['profile_image_url'] != null && 
-             _patientData?['profile_image_url'].toString().trim().isNotEmpty == true) {
-    avatarImage = NetworkImage(_patientData?['profile_image_url']);
-  }
-}
+    ImageProvider? avatarImage;
+    if (!_isImageDeleted) {
+      if (_selectedImage != null && _selectedImage!.path.isNotEmpty) {
+        avatarImage = FileImage(File(_selectedImage!.path));
+      } else if (_patientData?['profile_image_url'] != null && 
+                 _patientData?['profile_image_url'].toString().trim().isNotEmpty == true) {
+        avatarImage = NetworkImage(_patientData?['profile_image_url']);
+      }
+    }
 
-  return Container(
-    width: double.infinity,
-    decoration: const BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color.fromARGB(255, 114, 169, 213), Color.fromARGB(255, 166, 202, 219)],
-      ),
-    ),
-    child: SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-        child: Column(
-          children: [
-            GestureDetector(
-              onTap: () => _showImageSourceOptions(context),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Outer white ring border
-                  Container(
-                    width: 86,
-                    height: 86,
-                    decoration: const BoxDecoration(
-                      color: Colors.white24, // Semitransparent white
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      // Main Profile Avatar Circle
-                      child: CircleAvatar(
-                        radius: 40,
-                        backgroundColor: Colors.white, // White fallback background
-                        backgroundImage: avatarImage,
-                        child: avatarImage == null
-                            ? Text(
-                                initials,
-                                style: const TextStyle(
-                                  color: Colors.blue, // Blue initials text
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              )
-                            : null,
-                      ),
-                    ),
-                  ),
-                  // Edit Badge Icon overlay
-                  Positioned(
-                    bottom: 0,
-                    right: 4,
-                    child: Container(
-                      width: 26,
-                      height: 26,
-                      decoration: BoxDecoration(
-                        color: Colors.blueAccent,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: const Icon(Icons.edit, size: 12, color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              fullName,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'ID: $patientId',
-              style: const TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 0.5),
-            ),
-          ],
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color.fromARGB(255, 114, 169, 213), Color.fromARGB(255, 166, 202, 219)],
         ),
       ),
-    ),
-  );
-}
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: () => _showImageSourceOptions(context),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 86,
+                      height: 86,
+                      decoration: const BoxDecoration(
+                        color: Colors.white24,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Colors.white,
+                          backgroundImage: avatarImage,
+                          child: avatarImage == null
+                              ? Text(
+                                  initials.isEmpty ? 'P' : initials,
+                                  style: const TextStyle(
+                                    color: Colors.blue,
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 4,
+                      child: Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: Colors.blueAccent,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: const Icon(Icons.edit, size: 12, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                fullName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'ID: $patientId',
+                style: const TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 0.5),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildProfileCard() {
     return Container(
@@ -423,10 +441,7 @@ if (!_isImageDeleted) {
                     ? const SizedBox(
                         height: 18,
                         width: 18,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                       )
                     : const Text('Save Changes'),
               ),
@@ -460,17 +475,43 @@ if (!_isImageDeleted) {
               ),
             ),
             const SizedBox(height: 14),
-            _buildPasswordField('Current Password', _currentPasswordController, _currentPassVisible, () {
-              setState(() => _currentPassVisible = !_currentPassVisible);
-            }),
+            _buildPasswordField(
+              'Current Password', 
+              _currentPasswordController, 
+              _currentPassVisible, 
+              () => setState(() => _currentPassVisible = !_currentPassVisible),
+              validator: (v) => Validators.validateRequired(v, 'Current Password'),
+            ),
             const SizedBox(height: 12),
-            _buildPasswordField('New Password', _newPasswordController, _newPassVisible, () {
-              setState(() => _newPassVisible = !_newPassVisible);
-            }),
+            _buildPasswordField(
+              'New Password', 
+              _newPasswordController, 
+              _newPassVisible, 
+              () => setState(() => _newPassVisible = !_newPassVisible),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'New password is required';
+                if (v.length < 8) return 'Password must be at least 8 characters long';
+                
+                // 🔥 ENHANCED REGEX PATTERN: Requires 1 Uppercase, 1 Lowercase, 1 Number, allows special characters
+                final passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$');
+                if (!passwordRegex.hasMatch(v)) {
+                  return 'Must include uppercase, lowercase, and a number';
+                }
+                return null;
+              },
+            ),
             const SizedBox(height: 12),
-            _buildPasswordField('Confirm New Password', _confirmPasswordController, _confirmPassVisible, () {
-              setState(() => _confirmPassVisible = !_confirmPassVisible);
-            }),
+            _buildPasswordField(
+              'Confirm New Password', 
+              _confirmPasswordController, 
+              _confirmPassVisible, 
+              () => setState(() => _confirmPassVisible = !_confirmPassVisible),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Please confirm your new password';
+                if (v != _newPasswordController.text) return 'Passwords do not match';
+                return null;
+              },
+            ),
             const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
@@ -498,7 +539,13 @@ if (!_isImageDeleted) {
     );
   }
 
-  Widget _buildPasswordField(String label, TextEditingController controller, bool visible, VoidCallback toggle) {
+  Widget _buildPasswordField(
+    String label, 
+    TextEditingController controller, 
+    bool visible, 
+    VoidCallback toggle, 
+    {required FormFieldValidator<String> validator}
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -507,13 +554,13 @@ if (!_isImageDeleted) {
         TextFormField(
           controller: controller,
           obscureText: !visible,
-          validator: (v) => Validators.validateRequired(v, label),
+          validator: validator,
           decoration: InputDecoration(
             hintText: '••••••••',
             prefixIcon: Icon(Icons.lock_outline, size: 18, color: Colors.grey[400]),
             suffixIcon: IconButton(
               icon: Icon(
-                visible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                visible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                 size: 18,
                 color: Colors.grey[400],
               ),
@@ -531,11 +578,11 @@ if (!_isImageDeleted) {
       child: ElevatedButton(
         onPressed: () async {
           await _authService.logout();
-          if (mounted) context.go('/patient-login'); // Adjust route destination if needed
+          if (mounted) context.go('/patient-login');
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFFEBEE), // Lightweight Red background
-          foregroundColor: const Color(0xFFC62828), // Red text
+          backgroundColor: const Color(0xFFFFEBEE), 
+          foregroundColor: const Color(0xFFC62828), 
           side: const BorderSide(color: Color(0xFFFFEBEE), width: 2),
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(

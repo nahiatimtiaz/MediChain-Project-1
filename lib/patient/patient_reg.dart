@@ -11,7 +11,7 @@ class PatientRegistrationScreen extends StatefulWidget {
 
 class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
   final SupabaseClient _supabase = Supabase.instance.client;
-  final _formKey = GlobalKey<FormState>(); // Added for structural validation
+  final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
@@ -21,6 +21,7 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
   final TextEditingController _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _passwordVisible = false;
 
   // 1. Bangladesh Phone Number Regex (Supports +8801X..., 8801X..., or 01X...)
   final RegExp _bdPhoneRegex = RegExp(r'^(?:\+88|88)?(01[3-9]\d{8})$');
@@ -33,7 +34,7 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
   // 3. Strong Password Regex (Min 8 chars, at least 1 letter and 1 number)
   final RegExp _passwordRegex = RegExp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$');
 
-  Future<void> _registerPatient() async {
+Future<void> _registerPatient() async {
     // Basic validation before hitting Supabase
     if (!_formKey.currentState!.validate()) {
       return; 
@@ -62,8 +63,6 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
 
       final user = response.user;
 
-      // Note: If you have "Confirm Email" turned ON in Supabase, 
-      // response.session might be null, causing downstream page loads to fail.
       if (user != null) {
         await _supabase.from('patients').insert({
           'id': user.id,
@@ -76,18 +75,31 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
 
       if (!mounted) return;
 
-      _showSnackBar('Registration successful! Welcome.', Colors.green);
-      _clearControllers();
-
-      // Navigate straight to dashboard
-      context.go('/patient-home-page');
+      // 🔥 FIX: Check if email confirmation link is pending
+      if (response.session == null) {
+        // We capture the email text *before* clearing the controllers so the pop-up reads it
+        final String registeredEmail = _emailController.text.trim();
+        _clearControllers();
+        
+        // Show the dialog box and STOP execution here (do not proceed to home page)
+        _showVerificationDialog(registeredEmail);
+      } else {
+        _showSnackBar('Registration successful! Welcome.', Colors.green);
+        _clearControllers();
+        context.go('/patient-home-page');
+      }
 
     } on AuthException catch (error) {
       if (!mounted) return;
       _showSnackBar(error.message, Colors.red);
     } catch (error) {
       if (!mounted) return;
-      _showSnackBar('An unexpected error occurred.', Colors.red);
+      debugPrint("╔═════════════ SUPABASE DATABASE ERROR ═════════════");
+      debugPrint("║ Type: ${error.runtimeType}");
+      debugPrint("║ Error: $error");
+      debugPrint("╚═══════════════════════════════════════════════════");
+
+      _showSnackBar('An unexpected error occurred: $error', Colors.red);
     } finally {
       if (mounted) {
         setState(() {
@@ -95,6 +107,53 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
         });
       }
     }
+  }
+void _showVerificationDialog(String userEmail) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E293B),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.mark_email_unread_outlined, color: Color(0xFF3B82F6), size: 28),
+              SizedBox(width: 12),
+              Text('Verify Your Email', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'We have sent a verification link to:\n$userEmail',
+                style: const TextStyle(color: Color(0xFFD1D5DB), fontSize: 14, height: 1.4),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Please check your inbox (and spam folder) and click the link to activate your patient account before logging in.',
+                style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13, height: 1.4),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.go('/entry');
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF3B82F6),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+              child: const Text('Got it, take me to login →', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   String _generatePatientId() {
@@ -134,7 +193,7 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
       backgroundColor: const Color(0xFF0F172A),
       body: Column(
         children: [
-          // Header (Kept intact from your original design)
+          // Header Section
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
@@ -166,12 +225,12 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         GestureDetector(
-                          onTap: () => context.go('/'),
+                          onTap: () => context.go('/entry'),
                           child: Container(
                             width: 36,
                             height: 36,
                             decoration: BoxDecoration(
-                              color: Colors.white.withAlpha(30),
+                              color: Colors.white.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(Icons.arrow_back, color: Colors.white, size: 18),
@@ -194,7 +253,7 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
             ),
           ),
 
-          // Form Section wrapped in a Form widget
+          // Form Section
           Expanded(
             child: Container(
               width: double.infinity,
@@ -226,7 +285,7 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
                           prefixIcon: const Icon(Icons.person_outline),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        validator: (value) => value!.isEmpty ? 'First name required' : null,
+                        validator: (value) => value == null || value.trim().isEmpty ? 'First name required' : null,
                       ),
                       const SizedBox(height: 16),
 
@@ -238,7 +297,7 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
                           prefixIcon: const Icon(Icons.badge_outlined),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        validator: (value) => value!.isEmpty ? 'Last name required' : null,
+                        validator: (value) => value == null || value.trim().isEmpty ? 'Last name required' : null,
                       ),
                       const SizedBox(height: 16),
 
@@ -281,11 +340,23 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
                       // Password Field with Regex Validation
                       TextFormField(
                         controller: _passwordController,
-                        obscureText: true,
+                        obscureText: !_passwordVisible,
                         decoration: InputDecoration(
                           hintText: 'Password (Min. 8 characters)',
                           prefixIcon: const Icon(Icons.lock_outline),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _passwordVisible
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _passwordVisible = !_passwordVisible;
+                              });
+                            },
+                          ),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) return 'Password required';
@@ -300,13 +371,25 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
                       // Confirm Password
                       TextFormField(
                         controller: _confirmPasswordController,
-                        obscureText: true,
+                        obscureText: !_passwordVisible,
                         decoration: InputDecoration(
                           hintText: 'Confirm Password',
                           prefixIcon: const Icon(Icons.verified_user_outlined),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _passwordVisible
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _passwordVisible = !_passwordVisible;
+                              });
+                            },
+                          ),
                         ),
-                        validator: (value) => value!.isEmpty ? 'Confirm your password' : null,
+                        validator: (value) => value == null || value.isEmpty ? 'Confirm your password' : null,
                       ),
                       const SizedBox(height: 32),
 
@@ -342,3 +425,17 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
     );
   }
 }
+/*
+id uuid
+patient_id text
+full_name text
+email text
+phone text
+date_of_birth date
+gender text
+blood_group text
+address text
+allergies text
+profile_image_url text
+created_text ...
+*/

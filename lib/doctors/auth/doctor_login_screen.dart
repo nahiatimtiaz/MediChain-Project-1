@@ -88,7 +88,7 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         GestureDetector(
-                          onTap: () => context.go('/'),
+                          onTap: () => context.go('/entry'),
                           child: Container(
                             width: 36,
                             height: 36,

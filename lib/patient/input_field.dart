@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 
 class InputField extends StatelessWidget {
-  // Corrected types: Objects use their specific Flutter classes instead of String
   final String label;
   final String? hint;
   final String? errorText;
   final bool obscureText;
   
-  final TextEditingController? controller; // Changed from String
-  final TextInputType? keyboardType;       // Changed from String
-  final Widget? icon;                      // Changed from String (Allows Icon(Icons.abc))
+  final TextEditingController? controller; 
+  final TextInputType? keyboardType;       
+  final Widget? icon;                      
 
   const InputField({
-    super.key, // Updated to modern Flutter key syntax
+    super.key, 
     required this.label,
     this.controller,
     this.keyboardType,
@@ -29,7 +28,6 @@ class InputField extends StatelessWidget {
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
-        // Uses obscureText variable directly, fallback to checking password type
         obscureText: obscureText || keyboardType == TextInputType.visiblePassword,
         decoration: InputDecoration(
           labelText: label,

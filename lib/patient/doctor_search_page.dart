@@ -43,6 +43,8 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
     int hour = 0;
     int minute = 0;
 
+    final normalizedStr = cleanStr.trim().toLowerCase();
+
     if (cleanStr.contains('am') || cleanStr.contains('pm')) {
       final parts = cleanStr.replaceAll(RegExp(r'[am|pm]'), '').trim().split(':');
       hour = int.parse(parts[0]);

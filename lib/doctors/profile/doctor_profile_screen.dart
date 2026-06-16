@@ -417,8 +417,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   suffixIcon: IconButton(
                     icon: Icon(
                       _newPassVisible
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                       size: 18,
                       color: AppColors.textTertiary,
                     ),
@@ -450,8 +450,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   suffixIcon: IconButton(
                     icon: Icon(
                       _confirmPassVisible
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                       size: 18,
                       color: AppColors.textTertiary,
                     ),
@@ -500,7 +500,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         child: ElevatedButton(
           onPressed: () async {
             await _authService.logout();
-            if (mounted) context.go('/');
+            if (mounted) context.go('/entry');
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.redLight,
