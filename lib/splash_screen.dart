@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:medichain/patient/home_page.dart';
+import 'package:medichain/patient/login_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,6 +18,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
+    _checkExistingSession();
     
     _fadeController = AnimationController(
       vsync: this,
@@ -29,7 +33,30 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       if (mounted) _fadeController.forward();
     });
   }
+  Future<void> _checkExistingSession() async {
+  // 1. Wait a moment for your splash logo animation to display nicely (e.g., 2 seconds)
+  await Future.delayed(const Duration(seconds: 2));
 
+  if (!mounted) return;
+
+  // 2. Grab the current active session from Supabase
+  final session = Supabase.instance.client.auth.currentSession;
+
+  // 3. Smart routing decision based on login state
+  if (session != null) {
+    // 🎉 User is already logged in! Route them straight to the HomePage dashboard
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+    );
+  } else {
+    // 🔒 No saved session found. Route them to the Login/Onboarding screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const PatientLoginScreen()), // Replace with your actual LoginPage class name
+    );
+  }
+}
   @override
   void dispose() {
     _fadeController.dispose();

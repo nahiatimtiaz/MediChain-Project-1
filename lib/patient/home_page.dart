@@ -149,6 +149,7 @@ class _HomePageState extends State<HomePage> {
     required String label,
     required TextEditingController controller,
     required IconData icon,
+    String? hintText,
     int maxLines = 1,
     bool enabled = true,
   }) {
@@ -161,6 +162,8 @@ class _HomePageState extends State<HomePage> {
         style: TextStyle(color: enabled ? Colors.black87 : Colors.black54),
         decoration: InputDecoration(
           labelText: label,
+          hintText: hintText,
+          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
           prefixIcon: Icon(icon, color: Colors.blueAccent.shade100, size: 22),
           labelStyle: const TextStyle(color: Colors.black54, fontSize: 14),
           filled: true,
@@ -182,51 +185,58 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> cancelAppointment(String appointmentDbId) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Cancel Appointment"),
-          content: const Text("Are you sure you want to cancel this appointment?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("No"),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text("Yes, Cancel", style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+ Future<void> cancelAppointment(String appointmentDbId) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text("Cancel Appointment"),
+        content: const Text("Are you sure you want to cancel this appointment?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("No"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Yes, Cancel", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      );
+    },
+  );
+
+  if (confirmed != true) return;
+
+  try {
+    // Delete from Supabase
+    await supabase.from('appointments').delete().eq('id', appointmentDbId);
+
+    if (!mounted) return;
+
+    
+    
+    setState(() {}); 
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Appointment cancelled successfully"),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating, 
+      ),
     );
-
-    if (confirmed != true) return;
-
-    try {
-      await supabase.from('appointments').delete().eq('id', appointmentDbId);
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Appointment cancelled successfully"),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Failed to cancel appointment: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Failed to cancel appointment: $e"),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
+}
 
   Widget buildAppointmentsSection() {
     return Column(
@@ -377,12 +387,12 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 children: [
                   buildTextField(label: 'Patient Identification Number', controller: patientIdController, icon: Icons.fingerprint, enabled: false),
-                  buildTextField(label: 'Full Name', controller: fullNameController, icon: Icons.person_outline),
-                  buildTextField(label: 'Email Address', controller: emailController, icon: Icons.mail_outline),
-                  buildTextField(label: 'Phone Contact', controller: phoneController, icon: Icons.phone_android),
-                  buildTextField(label: 'Date of Birth', controller: dobController, icon: Icons.cake_outlined),
-                  buildTextField(label: 'Gender Identity', controller: genderController, icon: Icons.wc_outlined),
-                  buildTextField(label: 'Blood Profile', controller: bloodGroupController, icon: Icons.bloodtype_outlined),
+                  buildTextField(label: 'Full Name', controller: fullNameController, icon: Icons.person_outline, hintText: 'e.g first name last name'),
+                  buildTextField(label: 'Email Address', controller: emailController, icon: Icons.mail_outline, hintText: 'e.g. name@gmail.com'),
+                  buildTextField(label: 'Phone Contact', controller: phoneController, icon: Icons.phone_android, hintText: 'e.g. 01xxxxxxxxx'),
+                  buildTextField(label: 'Date of Birth', controller: dobController, icon: Icons.cake_outlined, hintText: 'e.g. M-D-Y'),
+                  buildTextField(label: 'Gender Identity', controller: genderController, icon: Icons.wc_outlined, hintText: 'e.g. female, male, others'),
+                  buildTextField(label: 'Blood Profile', controller: bloodGroupController, icon: Icons.bloodtype_outlined, hintText: 'e.g. A+'),
                   buildTextField(label: 'Residential Address', controller: addressController, icon: Icons.home_outlined, maxLines: 2),
                   buildTextField(label: 'Known Pathological Allergies', controller: allergiesController, icon: Icons.warning_amber_rounded, maxLines: 2),
                   const SizedBox(height: 12),
