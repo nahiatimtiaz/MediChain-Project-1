@@ -39,37 +39,44 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
   bool _isLoading = false;
   bool _passwordVisible = false;
 
+  String _formatTime(TimeOfDay? time) {
+  if (time == null) return '';
+  final String hour = time.hour.toString().padLeft(2, '0');
+  final String minute = time.minute.toString().padLeft(2, '0');
+  return '$hour:$minute';
+}
+
   // New states for dynamic time slot partitioning
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
 
   bool get _isEditing => widget.doctor != null;
 
-  @override
-  void initState() {
-    super.initState();
-    if (_isEditing) {
-      _nameController.text = widget.doctor!.fullName;
-      _emailController.text = widget.doctor!.email;
-      _phoneController.text = widget.doctor!.phone ?? '';
-      _qualificationsController.text = widget.doctor!.qualifications ?? '';
-      _feeController.text = widget.doctor!.consultationFee.toString();
-      _selectedDepartment = widget.doctor!.department;
-      _selectedSlotDuration = widget.doctor!.slotDuration;
-      _selectedDays = List.from(widget.doctor!.availableDays);
-      _existingImageUrl = widget.doctor!.profileImageUrl;
+ @override
+void initState() {
+  super.initState();
+  if (_isEditing) {
+    _nameController.text = widget.doctor!.fullName;
+    _emailController.text = widget.doctor!.email;
+    _phoneController.text = widget.doctor!.phone ?? '';
+    _qualificationsController.text = widget.doctor!.qualifications ?? '';
+    _feeController.text = widget.doctor!.consultationFee.toString();
+    _selectedDepartment = widget.doctor!.department;
+    _selectedSlotDuration = widget.doctor!.slotDuration;
+    _selectedDays = List.from(widget.doctor!.availableDays);
+    _existingImageUrl = widget.doctor!.profileImageUrl;
 
-      // Parse chamber times from string to TimeOfDay for the UI
-      if (widget.doctor!.chamberStartTime != null &&
-          widget.doctor!.chamberStartTime!.isNotEmpty) {
-        _startTime = _parseTimeOfDay(widget.doctor!.chamberStartTime!);
-      }
-      if (widget.doctor!.chamberEndTime != null &&
-          widget.doctor!.chamberEndTime!.isNotEmpty) {
-        _endTime = _parseTimeOfDay(widget.doctor!.chamberEndTime!);
-      }
+    // 👇 ADD THIS TO PARSE DB STRINGS INTO THE TIME WIDGET STATES:
+    if (widget.doctor!.startTime != null && widget.doctor!.startTime!.isNotEmpty) {
+      final parts = widget.doctor!.startTime!.split(':');
+      _startTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1].substring(0, 2)));
+    }
+    if (widget.doctor!.endTime != null && widget.doctor!.endTime!.isNotEmpty) {
+      final parts = widget.doctor!.endTime!.split(':');
+      _endTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1].substring(0, 2)));
     }
   }
+}
 
   // Helper method to parse String (e.g., "03:00 PM") to TimeOfDay
   TimeOfDay _parseTimeOfDay(String? timeStr) {
@@ -198,27 +205,25 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
 
     // Creating the DoctorModel with corrected time fields
     final doctor = DoctorModel(
-      id: widget.doctor?.id,
-      doctorId: customDoctorId,
-      fullName: _nameController.text.trim(),
-      email: _emailController.text.trim(),
-      phone: _phoneController.text.trim(),
-      qualifications: _qualificationsController.text.trim(),
-      consultationFee: double.parse(_feeController.text),
-      department: _selectedDepartment,
-      slotDuration: _selectedSlotDuration,
-      availableDays: _selectedDays,
-
-      // Using the TimeOfDay variables formatted as string
-      chamberStartTime: _startTime!.format(context),
-      chamberEndTime: _endTime!.format(context),
-      startTime: _startTime!.format(context),
-      endTime: _endTime!.format(context),
-
-      maxPatientsPerDay: widget.doctor?.maxPatientsPerDay ?? 50,
-      profileImageUrl: imageUrl,
-      accountStatus: true,
-    );
+  id: widget.doctor?.id,
+  doctorId: customDoctorId,
+  fullName: _nameController.text.trim(),
+  email: _emailController.text.trim(),
+  phone: _phoneController.text.trim(),
+  qualifications: _qualificationsController.text.trim(),
+  consultationFee: double.parse(_feeController.text),
+  department: _selectedDepartment,
+  slotDuration: _selectedSlotDuration,
+  availableDays: _selectedDays,
+  
+  // 👇 CHANGE THESE TWO LINES TO USE THE HELPER FUNCTION:
+  startTime: _formatTime(_startTime),
+  endTime: _formatTime(_endTime),
+  
+  maxPatientsPerDay: widget.doctor?.maxPatientsPerDay ?? 50,
+  profileImageUrl: imageUrl,
+  accountStatus: true,
+);
 
     bool success;
     if (_isEditing) {
