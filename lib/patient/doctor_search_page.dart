@@ -44,40 +44,37 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
   }) {
     List<Map<String, dynamic>> slots = [];
 
-    int parseTimeToMinutes(String? timeStr) {
-      // Return a default of 0 (or 540 for 9:00 AM) if the input is empty or null
-      if (timeStr == null ||
-          timeStr.toLowerCase() == 'empty' ||
-          timeStr.trim().isEmpty) {
-        return 540; // Default: 9:00 AM in minutes
+    int parseTimeToMinutes(String timeStr) {
+      final cleanStr = timeStr.trim().toLowerCase();
+
+      int hour = 0;
+
+      int minute = 0;
+
+      final normalizedStr = cleanStr.trim().toLowerCase();
+
+      if (cleanStr.contains('am') || cleanStr.contains('pm')) {
+        final parts = cleanStr
+            .replaceAll(RegExp(r'[am|pm]'), '')
+            .trim()
+            .split(':');
+
+        hour = int.parse(parts[0]);
+
+        minute = int.parse(parts[1]);
+
+        if (cleanStr.contains('pm') && hour != 12) hour += 12;
+
+        if (cleanStr.contains('am') && hour == 12) hour = 0;
+      } else {
+        final parts = cleanStr.split(':');
+
+        hour = int.parse(parts[0]);
+
+        minute = int.parse(parts[1]);
       }
 
-      try {
-        final cleanStr = timeStr.trim().toLowerCase();
-        int hour = 0;
-        int minute = 0;
-
-        if (cleanStr.contains('am') || cleanStr.contains('pm')) {
-          // Remove all non-numeric characters except ':' for parsing
-          final timePart = cleanStr.replaceAll(RegExp(r'[^0-9:]'), '').trim();
-          final parts = timePart.split(':');
-
-          hour = int.parse(parts[0]);
-          minute = parts.length > 1 ? int.parse(parts[1]) : 0;
-
-          if (cleanStr.contains('pm') && hour != 12) hour += 12;
-          if (cleanStr.contains('am') && hour == 12) hour = 0;
-        } else {
-          final parts = cleanStr.split(':');
-          hour = int.parse(parts[0]);
-          minute = parts.length > 1 ? int.parse(parts[1]) : 0;
-        }
-
-        return (hour * 60) + minute;
-      } catch (e) {
-        // If any parsing error occurs, return default 9:00 AM
-        return 540;
-      }
+      return (hour * 60) + minute;
     }
 
     String formatMinutesToTime(int totalMinutes) {
