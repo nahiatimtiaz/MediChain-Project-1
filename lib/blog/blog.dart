@@ -477,9 +477,15 @@ class _PostCardState extends State<PostCard> {
   }
 
   String formatDate(String date) {
-    final parsed = DateTime.parse(date);
-    return DateFormat('dd MMM yyyy • hh:mm a').format(parsed);
-  }
+  // 1. Parse the raw database timestamp string
+  final parsed = DateTime.parse(date);
+  
+  // 2. 🔥 Convert it to the user's physical phone timezone (e.g., BST for Bangladesh)
+  final localDateTime = parsed.toLocal(); 
+  
+  // 3. Format your new localized date and time safely
+  return DateFormat('dd MMM yyyy • hh:mm a').format(localDateTime);
+}
 
   Widget roleBadge(String role, bool verified) {
     Color bg = Colors.green.shade100;

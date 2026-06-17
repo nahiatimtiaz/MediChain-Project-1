@@ -45,16 +45,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   // 3. Smart routing decision based on login state
   if (session != null) {
     // 🎉 User is already logged in! Route them straight to the HomePage dashboard
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const HomePage()),
-    );
+    // Navigator.pushReplacement(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => const HomePage()),
+    // );
+    context.go('/patient-home-page');
   } else {
-    // 🔒 No saved session found. Route them to the Login/Onboarding screen
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const PatientLoginScreen()), // Replace with your actual LoginPage class name
-    );
+
+    context.go('/patient-login');
   }
 }
   @override
