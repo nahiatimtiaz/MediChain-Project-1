@@ -58,24 +58,68 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
       _selectedSlotDuration = widget.doctor!.slotDuration;
       _selectedDays = List.from(widget.doctor!.availableDays);
       _existingImageUrl = widget.doctor!.profileImageUrl;
-      _startTimeController.text = widget.doctor!.startTime ?? '';
-      _endTimeController.text = widget.doctor!.endTime ?? '';
+
+      // Parse chamber times from string to TimeOfDay for the UI
+      if (widget.doctor!.chamberStartTime != null &&
+          widget.doctor!.chamberStartTime!.isNotEmpty) {
+        _startTime = _parseTimeOfDay(widget.doctor!.chamberStartTime!);
+      }
+      if (widget.doctor!.chamberEndTime != null &&
+          widget.doctor!.chamberEndTime!.isNotEmpty) {
+        _endTime = _parseTimeOfDay(widget.doctor!.chamberEndTime!);
+      }
     }
   }
 
-  // --- Time Picker ---
-  Future<void> _selectTime(
-    BuildContext context,
-    TextEditingController controller,
-  ) async {
+  // Helper method to parse String (e.g., "03:00 PM") to TimeOfDay
+  TimeOfDay _parseTimeOfDay(String? timeStr) {
+    // Handle null, empty, or placeholder 'EMPTY' values by returning a default time
+    if (timeStr == null ||
+        timeStr.toLowerCase() == 'empty' ||
+        timeStr.trim().isEmpty) {
+      return const TimeOfDay(hour: 9, minute: 0);
+    }
+
+    try {
+      // Normalize string and extract hour and minute parts
+      final normalized = timeStr.toLowerCase().trim();
+      final parts = normalized.split(':');
+
+      int hour = int.parse(parts[0]);
+      int minute = int.parse(
+        parts[1].split(' ')[0].replaceAll(RegExp(r'[^0-9]'), ''),
+      );
+
+      // Adjust hour based on AM/PM indicator
+      if (normalized.contains('pm') && hour < 12) hour += 12;
+      if (normalized.contains('am') && hour == 12) hour = 0;
+
+      return TimeOfDay(hour: hour, minute: minute);
+    } catch (e) {
+      // Return default time if parsing fails due to unexpected format
+      return const TimeOfDay(hour: 9, minute: 0);
+    }
+  }
+
+  // Updated Time Picker for Start Time
+  Future<void> _selectStartTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: _startTime ?? const TimeOfDay(hour: 15, minute: 0),
     );
     if (picked != null && mounted) {
-      setState(() {
-        controller.text = picked.format(context);
-      });
+      setState(() => _startTime = picked);
+    }
+  }
+
+  // Updated Time Picker for End Time
+  Future<void> _selectEndTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _endTime ?? const TimeOfDay(hour: 19, minute: 0),
+    );
+    if (picked != null && mounted) {
+      setState(() => _endTime = picked);
     }
   }
 
@@ -118,10 +162,13 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
   // --- Save / Update ---
   Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
+    // Validation for Time and Days
     if (_startTime == null || _endTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select both Chamber Start and End times')),
+        const SnackBar(
+          content: Text('Please select both Chamber Start and End times'),
+        ),
       );
       return;
     }
@@ -149,13 +196,7 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
         ? (widget.doctor!.doctorId ?? '')
         : 'DOC-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
 
-    // // Automatically generate segmented slots array based on time configuration choices
-    // List<String> dynamicGeneratedSlots = _generateTimeSlots(
-    //   _startTime!,
-    //   _endTime!,
-    //   _selectedSlotDuration,
-    // );
-
+    // Creating the DoctorModel with corrected time fields
     final doctor = DoctorModel(
       id: widget.doctor?.id,
       doctorId: customDoctorId,
@@ -167,9 +208,13 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
       department: _selectedDepartment,
       slotDuration: _selectedSlotDuration,
       availableDays: _selectedDays,
-      startTime: _startTimeController.text.trim(),
-      endTime: _endTimeController.text.trim(),
-      //timeSlots: dynamicGeneratedSlots,
+
+      // Using the TimeOfDay variables formatted as string
+      chamberStartTime: _startTime!.format(context),
+      chamberEndTime: _endTime!.format(context),
+      startTime: _startTime!.format(context),
+      endTime: _endTime!.format(context),
+
       maxPatientsPerDay: widget.doctor?.maxPatientsPerDay ?? 50,
       profileImageUrl: imageUrl,
       accountStatus: true,
@@ -429,13 +474,19 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
                         OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size(double.infinity, 50),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           icon: const Icon(Icons.access_time),
-                          label: Text(_startTime == null ? 'Select Start' : _startTime!.format(context)),
+                          label: Text(
+                            _startTime == null
+                                ? 'Select Start'
+                                : _startTime!.format(context),
+                          ),
                           onPressed: () async {
                             final time = await showTimePicker(
-                              context: context, 
+                              context: context,
                               initialTime: const TimeOfDay(hour: 15, minute: 0),
                             );
                             if (time != null) setState(() => _startTime = time);
@@ -453,17 +504,22 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
                         OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size(double.infinity, 50),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           icon: const Icon(Icons.access_time),
-                          label: Text(_endTime == null ? 'Select End' : _endTime!.format(context)),
+                          label: Text(
+                            _endTime == null
+                                ? 'Select End'
+                                : _endTime!.format(context),
+                          ),
                           onPressed: () async {
                             final time = await showTimePicker(
-                              context: context, 
+                              context: context,
                               initialTime: const TimeOfDay(hour: 19, minute: 0),
                             );
                             if (time != null) setState(() => _endTime = time);
-                      
                           },
                         ),
                       ],
@@ -546,7 +602,9 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: _isLoading
                       ? const SizedBox(
@@ -569,7 +627,9 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
                 child: OutlinedButton(
                   onPressed: () => context.go('/doctors'),
                   style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: const Text('Cancel'),
                 ),

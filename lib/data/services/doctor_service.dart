@@ -8,9 +8,10 @@ class DoctorService {
   // Get all doctors
   Future<List<DoctorModel>> getAllDoctors() async {
     try {
+      // Fetching doctors with chamber timings
       final response = await _supabase
           .from('doctors')
-          .select()
+          .select('*, chamber_start_time, chamber_end_time')
           .order('full_name', ascending: true);
       return (response as List)
           .map((json) => DoctorModel.fromJson(json))
@@ -27,7 +28,7 @@ class DoctorService {
       print('Adding doctor: ${doctor.email}');
 
       final AuthResponse authResponse = await _supabase.auth.signUp(
-        email: doctor.email,
+        email: doctor.email.trim(),
         password: password,
       );
 
@@ -43,11 +44,12 @@ class DoctorService {
           'qualifications': doctor.qualifications,
           'phone': doctor.phone,
           'consultation_fee': doctor.consultationFee,
-         // 'time_slots': doctor.timeSlots,
           'slot_duration': doctor.slotDuration,
           'available_days': doctor.availableDays,
           'start_time': doctor.startTime,
           'end_time': doctor.endTime,
+          'chamber_start_time': doctor.chamberStartTime, // Added field
+          'chamber_end_time': doctor.chamberEndTime, // Added field
           'max_patients_per_day': doctor.maxPatientsPerDay,
           'profile_image_url': doctor.profileImageUrl,
           'account_status': true,
@@ -80,11 +82,12 @@ class DoctorService {
             'qualifications': doctor.qualifications,
             'consultation_fee': doctor.consultationFee,
             'department': doctor.department,
-            // 'time_slots': doctor.timeSlots,
             'slot_duration': doctor.slotDuration,
             'available_days': doctor.availableDays,
             'start_time': doctor.startTime,
             'end_time': doctor.endTime,
+            'chamber_start_time': doctor.chamberStartTime, // Added field
+            'chamber_end_time': doctor.chamberEndTime, // Added field
             'max_patients_per_day': doctor.maxPatientsPerDay,
             'profile_image_url': doctor.profileImageUrl,
           })
@@ -102,6 +105,44 @@ class DoctorService {
       return false;
     }
   }
+
+  // Search doctors
+  Future<List<DoctorModel>> searchDoctors(String query) async {
+    try {
+      // Searching doctors including chamber timing data
+      final response = await _supabase
+          .from('doctors')
+          .select('*, chamber_start_time, chamber_end_time')
+          .or(
+            'full_name.ilike.%$query%,department.ilike.%$query%,doctor_id.ilike.%$query%',
+          );
+      return (response as List)
+          .map((json) => DoctorModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      print('SEARCH DOCTORS ERROR: $e');
+      return [];
+    }
+  }
+
+  // Filter by department
+  Future<List<DoctorModel>> filterByDepartment(String department) async {
+    try {
+      // Filtering by department with timing data
+      final response = await _supabase
+          .from('doctors')
+          .select('*, chamber_start_time, chamber_end_time')
+          .eq('department', department);
+      return (response as List)
+          .map((json) => DoctorModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      print('FILTER BY DEPARTMENT ERROR: $e');
+      return [];
+    }
+  }
+
+  // ... (rest of your methods remain unchanged)
 
   // Delete doctor
   Future<bool> deleteDoctor(String doctorId, String doctorName) async {
@@ -145,40 +186,6 @@ class DoctorService {
     } catch (e) {
       print('RESET PASSWORD ERROR: $e');
       return false;
-    }
-  }
-
-  // Search doctors
-  Future<List<DoctorModel>> searchDoctors(String query) async {
-    try {
-      final response = await _supabase
-          .from('doctors')
-          .select()
-          .or(
-            'full_name.ilike.%$query%,department.ilike.%$query%,doctor_id.ilike.%$query%',
-          );
-      return (response as List)
-          .map((json) => DoctorModel.fromJson(json))
-          .toList();
-    } catch (e) {
-      print('SEARCH DOCTORS ERROR: $e');
-      return [];
-    }
-  }
-
-  // Filter by department
-  Future<List<DoctorModel>> filterByDepartment(String department) async {
-    try {
-      final response = await _supabase
-          .from('doctors')
-          .select()
-          .eq('department', department);
-      return (response as List)
-          .map((json) => DoctorModel.fromJson(json))
-          .toList();
-    } catch (e) {
-      print('FILTER BY DEPARTMENT ERROR: $e');
-      return [];
     }
   }
 

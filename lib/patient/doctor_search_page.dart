@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:math'; 
+import 'dart:math';
 import 'package:medichain/data/models/doctor_model.dart';
 // Make sure to change this import path to point to your actual DoctorModel file destination:
 // import 'package:your_app/models/doctor_model.dart';
@@ -27,83 +27,101 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
   String? selectedDayFilter;
 
   final List<String> weekDays = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
   ];
 
   List<Map<String, dynamic>> generateTimeSlots({
-  required String startTimeStr,
-  required String endTimeStr,
-  required int durationMinutes,
-  required DateTime? selectedDate, // 👈 Pass the chosen date here
-}) {
-  List<Map<String, dynamic>> slots = [];
+    required String startTimeStr,
+    required String endTimeStr,
+    required int durationMinutes,
+    required DateTime? selectedDate, // 👈 Pass the chosen date here
+  }) {
+    List<Map<String, dynamic>> slots = [];
 
-  int parseTimeToMinutes(String timeStr) {
-    final cleanStr = timeStr.trim().toLowerCase();
-    int hour = 0;
-    int minute = 0;
+    int parseTimeToMinutes(String? timeStr) {
+      // Return a default of 0 (or 540 for 9:00 AM) if the input is empty or null
+      if (timeStr == null ||
+          timeStr.toLowerCase() == 'empty' ||
+          timeStr.trim().isEmpty) {
+        return 540; // Default: 9:00 AM in minutes
+      }
 
-    final normalizedStr = cleanStr.trim().toLowerCase();
+      try {
+        final cleanStr = timeStr.trim().toLowerCase();
+        int hour = 0;
+        int minute = 0;
 
-    if (cleanStr.contains('am') || cleanStr.contains('pm')) {
-      final parts = cleanStr.replaceAll(RegExp(r'[am|pm]'), '').trim().split(':');
-      hour = int.parse(parts[0]);
-      minute = int.parse(parts[1]);
-      if (cleanStr.contains('pm') && hour != 12) hour += 12;
-      if (cleanStr.contains('am') && hour == 12) hour = 0;
-    } else {
-      final parts = cleanStr.split(':');
-      hour = int.parse(parts[0]);
-      minute = int.parse(parts[1]);
+        if (cleanStr.contains('am') || cleanStr.contains('pm')) {
+          // Remove all non-numeric characters except ':' for parsing
+          final timePart = cleanStr.replaceAll(RegExp(r'[^0-9:]'), '').trim();
+          final parts = timePart.split(':');
+
+          hour = int.parse(parts[0]);
+          minute = parts.length > 1 ? int.parse(parts[1]) : 0;
+
+          if (cleanStr.contains('pm') && hour != 12) hour += 12;
+          if (cleanStr.contains('am') && hour == 12) hour = 0;
+        } else {
+          final parts = cleanStr.split(':');
+          hour = int.parse(parts[0]);
+          minute = parts.length > 1 ? int.parse(parts[1]) : 0;
+        }
+
+        return (hour * 60) + minute;
+      } catch (e) {
+        // If any parsing error occurs, return default 9:00 AM
+        return 540;
+      }
     }
-    return (hour * 60) + minute;
-  }
 
-  String formatMinutesToTime(int totalMinutes) {
-    int hour = totalMinutes ~/ 60;
-    int minute = totalMinutes % 60;
-    String period = hour >= 12 ? 'PM' : 'AM';
-    int displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-    return "${displayHour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period";
-  }
-
-  int startMinutes = parseTimeToMinutes(startTimeStr);
-  final int endMinutes = parseTimeToMinutes(endTimeStr);
-
-  // Check if the selected date is today
-  bool isToday = false;
-  int currentMinutesSinceMidnight = 0;
-  
-  if (selectedDate != null) {
-    final now = DateTime.now();
-    if (selectedDate.year == now.year && 
-        selectedDate.month == now.month && 
-        selectedDate.day == now.day) {
-      isToday = true;
-      currentMinutesSinceMidnight = (now.hour * 60) + now.minute;
+    String formatMinutesToTime(int totalMinutes) {
+      int hour = totalMinutes ~/ 60;
+      int minute = totalMinutes % 60;
+      String period = hour >= 12 ? 'PM' : 'AM';
+      int displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+      return "${displayHour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period";
     }
+
+    int startMinutes = parseTimeToMinutes(startTimeStr);
+    final int endMinutes = parseTimeToMinutes(endTimeStr);
+
+    // Check if the selected date is today
+    bool isToday = false;
+    int currentMinutesSinceMidnight = 0;
+
+    if (selectedDate != null) {
+      final now = DateTime.now();
+      if (selectedDate.year == now.year &&
+          selectedDate.month == now.month &&
+          selectedDate.day == now.day) {
+        isToday = true;
+        currentMinutesSinceMidnight = (now.hour * 60) + now.minute;
+      }
+    }
+
+    while (startMinutes + durationMinutes <= endMinutes) {
+      int slotEndMinutes = startMinutes + durationMinutes;
+
+      String slotStartStr = formatMinutesToTime(startMinutes);
+      String slotEndStr = formatMinutesToTime(slotEndMinutes);
+      String slotString = "$slotStartStr - $slotEndStr";
+
+      // A slot has passed if it's today AND the slot's start time is earlier than right now
+      bool hasPassed = isToday && (startMinutes <= currentMinutesSinceMidnight);
+
+      slots.add({'slotText': slotString, 'hasPassed': hasPassed});
+
+      startMinutes = slotEndMinutes + 1;
+    }
+
+    return slots;
   }
-
-  while (startMinutes + durationMinutes <= endMinutes) {
-    int slotEndMinutes = startMinutes + durationMinutes;
-    
-    String slotStartStr = formatMinutesToTime(startMinutes);
-    String slotEndStr = formatMinutesToTime(slotEndMinutes);
-    String slotString = "$slotStartStr - $slotEndStr";
-
-    // A slot has passed if it's today AND the slot's start time is earlier than right now
-    bool hasPassed = isToday && (startMinutes <= currentMinutesSinceMidnight);
-
-    slots.add({
-      'slotText': slotString,
-      'hasPassed': hasPassed,
-    });
-
-    startMinutes = slotEndMinutes + 1; 
-  }
-
-  return slots;
-}
 
   @override
   void initState() {
@@ -120,7 +138,7 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
   Future<void> fetchDoctors() async {
     try {
       final response = await supabase.from('doctors').select();
-      
+
       // Map incoming database JSON arrays straight into typed DoctorModel instances
       final List<DoctorModel> loadedDoctors = (response as List)
           .map((json) => DoctorModel.fromJson(json))
@@ -147,14 +165,20 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
       final name = doctor.fullName.toLowerCase();
       final department = doctor.department.toLowerCase();
       final fee = doctor.consultationFee;
-      
-      final availableDays = doctor.availableDays.map((e) => e.toLowerCase()).toList();
+
+      final availableDays = doctor.availableDays
+          .map((e) => e.toLowerCase())
+          .toList();
 
       // Check Matchers
       final matchesSearch = name.contains(query) || department.contains(query);
-      final matchesFee = maxConsultationFee == null || fee <= maxConsultationFee!;
-      final matchesDay = selectedDayFilter == null || 
-          availableDays.any((day) => day.contains(selectedDayFilter!.toLowerCase()));
+      final matchesFee =
+          maxConsultationFee == null || fee <= maxConsultationFee!;
+      final matchesDay =
+          selectedDayFilter == null ||
+          availableDays.any(
+            (day) => day.contains(selectedDayFilter!.toLowerCase()),
+          );
 
       return matchesSearch && matchesFee && matchesDay;
     }).toList();
@@ -172,10 +196,7 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
   Widget detailText(String title, String value) {
     return Padding(
       padding: const EdgeInsets.only(top: 6),
-      child: Text(
-        "$title$value",
-        style: const TextStyle(fontSize: 14),
-      ),
+      child: Text("$title$value", style: const TextStyle(fontSize: 14)),
     );
   }
 
@@ -204,7 +225,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setSheetState) {
-            
             // Function to query already booked slots for that doctor on a selected date
             Future<void> checkSlotAvailability(DateTime date) async {
               setSheetState(() {
@@ -213,8 +233,9 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
               });
 
               try {
-                final formattedDateStr = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-                
+                final formattedDateStr =
+                    "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+
                 // Fetch existing appointments matching doctor UUID string
                 final existingBookings = await supabase
                     .from('appointments')
@@ -222,7 +243,8 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                     .eq('doctor_id', doctor.id ?? '')
                     .eq('appointment_date', formattedDateStr);
 
-                if (existingBookings != null && (existingBookings as List).isNotEmpty) {
+                if (existingBookings != null &&
+                    (existingBookings as List).isNotEmpty) {
                   disabledSlots = (existingBookings as List)
                       .map((booking) => booking['time_slot'].toString())
                       .toList();
@@ -248,9 +270,11 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
 
               try {
                 final currentUserUID = supabase.auth.currentUser?.id;
-                if (currentUserUID == null) throw "User authentication not found.";
+                if (currentUserUID == null)
+                  throw "User authentication not found.";
 
-                final dateStr = "${chosenDate!.year}-${chosenDate!.month.toString().padLeft(2, '0')}-${chosenDate!.day.toString().padLeft(2, '0')}";
+                final dateStr =
+                    "${chosenDate!.year}-${chosenDate!.month.toString().padLeft(2, '0')}-${chosenDate!.day.toString().padLeft(2, '0')}";
 
                 // 1. Count existing entries on that date to determine the serial number
                 final countResponse = await supabase
@@ -269,7 +293,7 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                 await supabase.from('appointments').insert({
                   'appointment_id': generatedAppId,
                   'doctor_id': doctor.id,
-                  'patient_id': currentUserUID, 
+                  'patient_id': currentUserUID,
                   'appointment_date': dateStr,
                   'time_slot': chosenSlot,
                   'serial_number': nextSerialNumber,
@@ -280,21 +304,27 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                 Navigator.pop(context); // Close sheet
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text("Success! Appt ID: $generatedAppId, Serial: #$nextSerialNumber"),
+                    content: Text(
+                      "Success! Appt ID: $generatedAppId, Serial: #$nextSerialNumber",
+                    ),
                     backgroundColor: const Color.fromARGB(255, 129, 179, 240),
                   ),
                 );
               } catch (e) {
                 debugPrint("BOOKING SUBMISSION ERROR: $e");
-                
+
                 String errorMsg = e.toString();
                 if (errorMsg.contains('unique_doctor_date_slot')) {
-                  errorMsg = "This exact slot was just reserved. Please pick another timing.";
+                  errorMsg =
+                      "This exact slot was just reserved. Please pick another timing.";
                 }
 
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Booking failed: $errorMsg"), backgroundColor: Colors.red),
+                  SnackBar(
+                    content: Text("Booking failed: $errorMsg"),
+                    backgroundColor: Colors.red,
+                  ),
                 );
               } finally {
                 setSheetState(() {
@@ -305,7 +335,9 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
 
             return Padding(
               padding: EdgeInsets.only(
-                top: 20, left: 20, right: 20,
+                top: 20,
+                left: 20,
+                right: 20,
                 bottom: MediaQuery.of(context).viewInsets.bottom + 20,
               ),
               child: Column(
@@ -313,152 +345,234 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
-                    child: Container(width: 50, height: 5, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10))),
+                    child: Container(
+                      width: 50,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 15),
-                  Text("Book Appointment", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blue.shade900)),
-                  Text("with Dr. ${doctor.fullName}", style: TextStyle(fontSize: 15, color: Colors.grey.shade600)),
+                  Text(
+                    "Book Appointment",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade900,
+                    ),
+                  ),
+                  Text(
+                    "with Dr. ${doctor.fullName}",
+                    style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
+                  ),
                   const Divider(height: 25),
 
                   // Date Picker Section
-                  const Text("Select Date", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Select Date",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   ListTile(
                     tileColor: Colors.blue.shade50,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    leading: const Icon(Icons.calendar_month, color: Colors.blue),
-                    title: Text(chosenDate == null 
-                        ? "Choose a Date" 
-                        : "${chosenDate!.day}/${chosenDate!.month}/${chosenDate!.year}"),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    leading: const Icon(
+                      Icons.calendar_month,
+                      color: Colors.blue,
+                    ),
+                    title: Text(
+                      chosenDate == null
+                          ? "Choose a Date"
+                          : "${chosenDate!.day}/${chosenDate!.month}/${chosenDate!.year}",
+                    ),
                     trailing: const Icon(Icons.arrow_drop_down),
                     onTap: () async {
-  // 1. Map integers to weekday strings
-  final List<String> indexToDayMap = [
-    '', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
-  ];
+                      // 1. Map integers to weekday strings
+                      final List<String> indexToDayMap = [
+                        '',
+                        'Monday',
+                        'Tuesday',
+                        'Wednesday',
+                        'Thursday',
+                        'Friday',
+                        'Saturday',
+                        'Sunday',
+                      ];
 
-  // Helper to check if a specific date is allowed by this doctor
-  bool isDayAvailable(DateTime date) {
-    String currentGridDay = indexToDayMap[date.weekday];
-    return doctor.availableDays.any(
-      (day) => day.trim().toLowerCase() == currentGridDay.toLowerCase()
-    );
-  }
+                      // Helper to check if a specific date is allowed by this doctor
+                      bool isDayAvailable(DateTime date) {
+                        String currentGridDay = indexToDayMap[date.weekday];
+                        return doctor.availableDays.any(
+                          (day) =>
+                              day.trim().toLowerCase() ==
+                              currentGridDay.toLowerCase(),
+                        );
+                      }
 
-  // 2. Find the closest valid initial date starting from today
-  DateTime calculatedInitialDate = DateTime.now();
-  bool foundValidDate = false;
+                      // 2. Find the closest valid initial date starting from today
+                      DateTime calculatedInitialDate = DateTime.now();
+                      bool foundValidDate = false;
 
-  // Search up to 30 days ahead for the first day this doctor actually works
-  for (int i = 0; i < 30; i++) {
-    DateTime checkDate = DateTime.now().add(Duration(days: i));
-    if (isDayAvailable(checkDate)) {
-      calculatedInitialDate = checkDate;
-      foundValidDate = true;
-      break;
-    }
-  }
+                      // Search up to 30 days ahead for the first day this doctor actually works
+                      for (int i = 0; i < 30; i++) {
+                        DateTime checkDate = DateTime.now().add(
+                          Duration(days: i),
+                        );
+                        if (isDayAvailable(checkDate)) {
+                          calculatedInitialDate = checkDate;
+                          foundValidDate = true;
+                          break;
+                        }
+                      }
 
-  // Fallback: If doctor has no valid days configured, don't open the picker
-  if (!foundValidDate) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("This doctor has no active working days scheduled."),
-        backgroundColor: Colors.orange,
-      ),
-    );
-    return;
-  }
+                      // Fallback: If doctor has no valid days configured, don't open the picker
+                      if (!foundValidDate) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "This doctor has no active working days scheduled.",
+                            ),
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                        return;
+                      }
 
-  // 3. Now safely open the picker with a guaranteed valid initialDate
-  final DateTime? picked = await showDatePicker(
-    context: context,
-    initialDate: calculatedInitialDate, // 👈 Safe initial position
-    firstDate: DateTime.now(),
-    lastDate: DateTime.now().add(const Duration(days: 30)),
-    selectableDayPredicate: (DateTime date) {
-      return isDayAvailable(date);
-    },
-  );
-  
-  if (picked != null) {
-    setSheetState(() { chosenDate = picked; });
-    await checkSlotAvailability(picked);
-  }
-},
+                      // 3. Now safely open the picker with a guaranteed valid initialDate
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate:
+                            calculatedInitialDate, // 👈 Safe initial position
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 30)),
+                        selectableDayPredicate: (DateTime date) {
+                          return isDayAvailable(date);
+                        },
+                      );
+
+                      if (picked != null) {
+                        setSheetState(() {
+                          chosenDate = picked;
+                        });
+                        await checkSlotAvailability(picked);
+                      }
+                    },
                   ),
                   const SizedBox(height: 15),
 
-                  // Dynamic Slot Chip Grid Generation 
-                  // Dynamic Slot Chip Grid Generation 
-if (chosenDate != null) ...[
-  const Text("Select Time Slot", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-  const SizedBox(height: 8),
-  if (isCheckingSlots)
-    const Center(child: Padding(padding: EdgeInsets.all(10), child: CircularProgressIndicator()))
-    // Quick safety check if doctor data isn't missing
-  else () {
-    // Generate the slots on the fly using the doctor data properties
-    final List<Map<String, dynamic>> computedDoctorSlots = generateTimeSlots(
-        startTimeStr: doctor.startTime ?? "15:00",
-        endTimeStr: doctor.endTime ?? "18:00",
-        durationMinutes: doctor.slotDuration ?? 15,
-        selectedDate: chosenDate, // 👈 Passing the active date
-      );
+                  // Dynamic Slot Chip Grid Generation
+                  // Dynamic Slot Chip Grid Generation
+                  if (chosenDate != null) ...[
+                    const Text(
+                      "Select Time Slot",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (isCheckingSlots)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(10),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    // Quick safety check if doctor data isn't missing
+                    else
+                      () {
+                        // Generate the slots on the fly using the doctor data properties
+                        final List<Map<String, dynamic>> computedDoctorSlots =
+                            generateTimeSlots(
+                              startTimeStr: doctor.startTime ?? "15:00",
+                              endTimeStr: doctor.endTime ?? "18:00",
+                              durationMinutes: doctor.slotDuration ?? 15,
+                              selectedDate:
+                                  chosenDate, // 👈 Passing the active date
+                            );
 
-    if (computedDoctorSlots.isEmpty) {
-      return const Text("No operational times available for this selection setup.", style: TextStyle(color: Colors.red));
-    }
+                        if (computedDoctorSlots.isEmpty) {
+                          return const Text(
+                            "No operational times available for this selection setup.",
+                            style: TextStyle(color: Colors.red),
+                          );
+                        }
 
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: computedDoctorSlots.map<Widget>((slotData) {
-        final String slot = slotData['slotText'];
-        final bool hasPassed = slotData['hasPassed'] ?? false;
-        final bool isBooked = disabledSlots.contains(slot);
-        final bool isUnavailable = isBooked || hasPassed;
-        final bool isSelected = chosenSlot == slot;
+                        return Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: computedDoctorSlots.map<Widget>((slotData) {
+                            final String slot = slotData['slotText'];
+                            final bool hasPassed =
+                                slotData['hasPassed'] ?? false;
+                            final bool isBooked = disabledSlots.contains(slot);
+                            final bool isUnavailable = isBooked || hasPassed;
+                            final bool isSelected = chosenSlot == slot;
 
-        return ChoiceChip(
-            label: Text(slot),
-            selected: isSelected,
-            selectedColor: Colors.blue,
-            labelStyle: TextStyle(
-              color: isSelected ? Colors.white : (isUnavailable ? Colors.grey : Colors.black)
-            ),
-            backgroundColor: isUnavailable ? Colors.grey.shade200 : Colors.blue.shade50,
-            disabledColor: Colors.grey.shade200,
-            // If it's booked or passed, set onSelected to null to completely disable it
-            onSelected: isUnavailable ? null : (selected) {
-              setSheetState(() {
-                chosenSlot = selected ? slot : null;
-              });
-            },
-          );
-      }).toList(),
-    );
-  }(),
-],
-                  
+                            return ChoiceChip(
+                              label: Text(slot),
+                              selected: isSelected,
+                              selectedColor: Colors.blue,
+                              labelStyle: TextStyle(
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isUnavailable
+                                          ? Colors.grey
+                                          : Colors.black),
+                              ),
+                              backgroundColor: isUnavailable
+                                  ? Colors.grey.shade200
+                                  : Colors.blue.shade50,
+                              disabledColor: Colors.grey.shade200,
+                              // If it's booked or passed, set onSelected to null to completely disable it
+                              onSelected: isUnavailable
+                                  ? null
+                                  : (selected) {
+                                      setSheetState(() {
+                                        chosenSlot = selected ? slot : null;
+                                      });
+                                    },
+                            );
+                          }).toList(),
+                        );
+                      }(),
+                  ],
+
                   const SizedBox(height: 25),
-                  
+
                   // Submit Button
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: (chosenDate == null || chosenSlot == null || isSubmitting) ? null : confirmBooking,
+                      onPressed:
+                          (chosenDate == null ||
+                              chosenSlot == null ||
+                              isSubmitting)
+                          ? null
+                          : confirmBooking,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue.shade800,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
-                      child: isSubmitting 
+                      child: isSubmitting
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text("Confirm & Reserve Slot", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          : const Text(
+                              "Confirm & Reserve Slot",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
-                  )
+                  ),
                 ],
               ),
             );
@@ -480,7 +594,10 @@ if (chosenDate != null) ...[
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Max Consultation Fee (BDT):", style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Max Consultation Fee (BDT):",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   Slider(
                     value: maxConsultationFee ?? 5000,
                     min: 200,
@@ -488,18 +605,30 @@ if (chosenDate != null) ...[
                     divisions: 24,
                     label: maxConsultationFee?.round().toString() ?? "Any",
                     onChanged: (val) {
-                      setDialogState(() { maxConsultationFee = val; });
+                      setDialogState(() {
+                        maxConsultationFee = val;
+                      });
                     },
                   ),
                   const SizedBox(height: 15),
-                  const Text("Available Day:", style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Available Day:",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   DropdownButton<String>(
                     value: selectedDayFilter,
                     isExpanded: true,
                     hint: const Text("Select Day"),
-                    items: weekDays.map((day) => DropdownMenuItem(value: day, child: Text(day))).toList(),
+                    items: weekDays
+                        .map(
+                          (day) =>
+                              DropdownMenuItem(value: day, child: Text(day)),
+                        )
+                        .toList(),
                     onChanged: (val) {
-                      setDialogState(() { selectedDayFilter = val; });
+                      setDialogState(() {
+                        selectedDayFilter = val;
+                      });
                     },
                   ),
                 ],
@@ -518,11 +647,11 @@ if (chosenDate != null) ...[
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    filterDisplay(); 
+                    filterDisplay();
                     Navigator.pop(context);
                   },
                   child: const Text("Apply Filters"),
-                )
+                ),
               ],
             );
           },
@@ -547,7 +676,7 @@ if (chosenDate != null) ...[
                         Expanded(
                           child: TextField(
                             controller: searchController,
-                            onChanged: (_) => filterDisplay(), 
+                            onChanged: (_) => filterDisplay(),
                             decoration: InputDecoration(
                               hintText: "Search doctor or department",
                               prefixIcon: const Icon(Icons.search),
@@ -566,7 +695,9 @@ if (chosenDate != null) ...[
                           style: IconButton.styleFrom(
                             backgroundColor: Colors.white,
                             padding: const EdgeInsets.all(14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                           onPressed: _showFilterDialog,
                         ),
@@ -597,33 +728,50 @@ if (chosenDate != null) ...[
                                     ],
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
                                           CircleAvatar(
                                             radius: 30,
-                                            backgroundColor: Colors.blue.shade100,
-                                            backgroundImage: doctor.profileImageUrl != null
-                                                ? NetworkImage(doctor.profileImageUrl!)
+                                            backgroundColor:
+                                                Colors.blue.shade100,
+                                            backgroundImage:
+                                                doctor.profileImageUrl != null
+                                                ? NetworkImage(
+                                                    doctor.profileImageUrl!,
+                                                  )
                                                 : null,
-                                            child: doctor.profileImageUrl == null
-                                                ? const Icon(Icons.person, size: 30, color: Colors.blue)
+                                            child:
+                                                doctor.profileImageUrl == null
+                                                ? const Icon(
+                                                    Icons.person,
+                                                    size: 30,
+                                                    color: Colors.blue,
+                                                  )
                                                 : null,
                                           ),
                                           const SizedBox(width: 16),
                                           Expanded(
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   doctor.fullName,
-                                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                                  style: const TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
                                                   doctor.department,
-                                                  style: TextStyle(color: Colors.grey.shade700, fontSize: 15),
+                                                  style: TextStyle(
+                                                    color: Colors.grey.shade700,
+                                                    fontSize: 15,
+                                                  ),
                                                 ),
                                               ],
                                             ),
@@ -631,25 +779,50 @@ if (chosenDate != null) ...[
                                         ],
                                       ),
                                       const SizedBox(height: 16),
-                                      detailText("Qualifications: ", doctor.qualifications ?? 'N/A'),
-                                      detailText("Consultation Fee: ", "${doctor.consultationFee.toStringAsFixed(0)} BDT"),
-                                      detailText("Available Days: ", formatDays(doctor.availableDays)),
-                                      detailText("Slot Duration: ", "${doctor.slotDuration} Minutes"),
-                                      detailText("Phone: ", doctor.phone ?? 'N/A'),
+                                      detailText(
+                                        "Qualifications: ",
+                                        doctor.qualifications ?? 'N/A',
+                                      ),
+                                      detailText(
+                                        "Consultation Fee: ",
+                                        "${doctor.consultationFee.toStringAsFixed(0)} BDT",
+                                      ),
+                                      detailText(
+                                        "Available Days: ",
+                                        formatDays(doctor.availableDays),
+                                      ),
+                                      detailText(
+                                        "Slot Duration: ",
+                                        "${doctor.slotDuration} Minutes",
+                                      ),
+                                      detailText(
+                                        "Phone: ",
+                                        doctor.phone ?? 'N/A',
+                                      ),
                                       detailText("Email: ", doctor.email),
                                       const Divider(height: 30),
-                                      
+
                                       SizedBox(
                                         width: double.infinity,
                                         height: 45,
                                         child: ElevatedButton.icon(
-                                          onPressed: () => _showBookingSheet(doctor),
+                                          onPressed: () =>
+                                              _showBookingSheet(doctor),
                                           icon: const Icon(Icons.edit_calendar),
-                                          label: const Text("Book Appointment", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          label: const Text(
+                                            "Book Appointment",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.blue.shade700,
+                                            backgroundColor:
+                                                Colors.blue.shade700,
                                             foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
                                           ),
                                         ),
                                       ),
