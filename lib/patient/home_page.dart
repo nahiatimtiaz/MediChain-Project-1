@@ -5,7 +5,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:medichain/blog/blog.dart';
 import 'package:medichain/patient/patient_history.dart';
 import 'doctor_search_page.dart';
-//import 'package:medichain/services/notification.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -35,7 +34,6 @@ class _HomePageState extends State<HomePage> {
 
   final String userId = Supabase.instance.client.auth.currentUser?.id ?? '';
   
-
   @override
   void initState() {
     super.initState();
@@ -44,8 +42,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    //Safely remove active overlay dropdown elements to prevent screen ghosting
-    // _closeNotificationOverlay();
     
     fullNameController.dispose();
     emailController.dispose();
@@ -58,13 +54,6 @@ class _HomePageState extends State<HomePage> {
     patientIdController.dispose();
     super.dispose();
   }
-
-  // void _closeNotificationOverlay() {
-  //   if (_overlayEntry != null) {
-  //     _overlayEntry!.remove();
-  //     _overlayEntry = null;
-  //   }
-  // }
 
   Future<void> fetchPatientData() async {
     try {
@@ -214,9 +203,6 @@ class _HomePageState extends State<HomePage> {
     await supabase.from('appointments').delete().eq('id', appointmentDbId);
 
     if (!mounted) return;
-
-    
-    
     setState(() {}); 
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -417,78 +403,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // void showNotificationsDropdown(BuildContext context) {
-  //   _closeNotificationOverlay(); // Guard against doubling elements
-
-  //   final overlay = Overlay.of(context);
-  //   _overlayEntry = OverlayEntry(
-  //     builder: (context) => Positioned(
-  //       top: kToolbarHeight + MediaQuery.of(context).padding.top - 10,
-  //       right: 16,
-  //       child: Material(
-  //         elevation: 12,
-  //         shadowColor: Colors.black12,
-  //         borderRadius: BorderRadius.circular(20),
-  //         child: Container(
-  //           width: 330,
-  //           height: 400,
-  //           padding: const EdgeInsets.all(16),
-  //           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-  //           child: StreamBuilder<List<Map<String, dynamic>>>(
-  //             stream: NotificationService.stream(userId),
-  //             builder: (context, snapshot) {
-  //               final notifications = snapshot.data ?? [];
-  //               return Column(
-  //                 children: [
-  //                   Row(
-  //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                     children: [
-  //                       const Text("Notifications", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-  //                       IconButton(
-  //                         icon: const Icon(Icons.close, size: 20, color: Colors.grey),
-  //                         onPressed: _closeNotificationOverlay,
-  //                       ),
-  //                     ],
-  //                   ),
-  //                   const Divider(),
-  //                   Expanded(
-  //                     child: notifications.isEmpty
-  //                         ? const Center(child: Text("No notifications yet", style: TextStyle(color: Colors.grey)))
-  //                         : ListView.builder(
-  //                             itemCount: notifications.length,
-  //                             itemBuilder: (context, index) {
-  //                               final n = notifications[index];
-  //                               return ListTile(
-  //                                 contentPadding: EdgeInsets.zero,
-  //                                 title: Text(n['title'] ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-  //                                 subtitle: Text(n['message'] ?? '', style: const TextStyle(fontSize: 12)),
-  //                                 leading: CircleAvatar(
-  //                                   backgroundColor: n['is_read'] ? Colors.grey.shade100 : Colors.blue.shade50,
-  //                                   child: Icon(
-  //                                     n['is_read'] ? Icons.notifications_none : Icons.notifications_active,
-  //                                     color: n['is_read'] ? Colors.grey : Colors.blue,
-  //                                     size: 20,
-  //                                   ),
-  //                                 ),
-  //                                 onTap: () async {
-  //                                   await NotificationService.markAsRead(n['id']);
-  //                                 },
-  //                               );
-  //                             },
-  //                           ),
-  //                   ),
-  //                 ],
-  //               );
-  //             },
-  //           ),
-  //         ),
-  //       ),
-  //     ),
-  //   );
-
-  //   overlay.insert(_overlayEntry!);
-  // }
-
   @override
   Widget build(BuildContext context) {
     final pages = [
@@ -505,41 +419,6 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: const Color(0xFF03489D),
         elevation: 0,
         title: const Text('MediChain', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
-        // actions: [
-        //   StreamBuilder<List<Map<String, dynamic>>>(
-        //     stream: NotificationService.stream(userId),
-        //     builder: (context, snapshot) {
-        //       // final notifications = snapshot.data ?? [];
-        //       // final unread = notifications.where((n) => n['is_read'] == false).length;
-
-        //       return Stack(
-        //         // alignment: Alignment.center,
-        //         // children: [
-        //         //   // IconButton(
-        //         //   //   icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 26),
-        //         //   //   onPressed: () => showNotificationsDropdown(context),
-        //         //   // ),
-        //         //   if (unread > 0)
-        //         //     Positioned(
-        //         //       right: 8,
-        //         //       top: 10,
-        //         //       child: Container(
-        //         //         padding: const EdgeInsets.all(4),
-        //         //         decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
-        //         //         constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-        //         //         child: Text(
-        //         //           unread.toString(),
-        //         //           style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-        //         //           textAlign: TextAlign.center,
-        //         //         ),
-        //         //       ),
-        //         //     ),
-        //         // ],
-        //       );
-        //     },
-        //   ),
-        //   const SizedBox(width: 8),
-        // ],
       ),
       body: isLoading ? const Center(child: CircularProgressIndicator(color: Color(0xFF03489D))) : pages[_selectedIndex],
       bottomNavigationBar: Container(

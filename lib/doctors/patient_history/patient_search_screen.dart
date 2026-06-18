@@ -147,21 +147,6 @@ class _PatientSearchScreenState extends State<PatientSearchScreen> {
           ],
         ),
       ),
-      // bottomNavigationBar: BottomNavigationBar(
-      //   currentIndex: 1,
-      //   selectedItemColor: AppColors.primary,
-      //   onTap: (index) {
-      //     if (index == 0) context.go('/doctor-schedule');
-      //     if (index == 2) context.go('/doctor-notifications');
-      //     if (index == 3) context.go('/doctor-profile');
-      //   },
-      //   items: const [
-      //     BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Schedule'),
-      //     BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Patients'),
-      //     BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Alerts'),
-      //     BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-      //   ],
-      // ),
     );
   }
 

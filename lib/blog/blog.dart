@@ -197,36 +197,23 @@ class _CommunityPageState extends State<CommunityPage> {
                             ).toInputDecoration(),
                           ),
                           const SizedBox(height: 10),
-                          // SwitchListTile(
-                          //   contentPadding: EdgeInsets.zero,
-                          //   title: const Text(
-                          //     "Post anonymously",
-                          //     style: TextStyle(fontWeight: FontWeight.w600),
-                          //   ),
-                          //   value: isAnonymous,
-                          //   onChanged: (value) {
-                          //     setState(() {
-                          //       isAnonymous = value;
-                          //     });
-                          //   },
-                          // ),
                           
-if (currentUserRole == 'patient') ...[ 
-  SwitchListTile(
-    contentPadding: EdgeInsets.zero,
-    title: const Text(
-      "Post anonymously",
-      style: TextStyle(fontWeight: FontWeight.w600),
-    ),
-    value: isAnonymous,
-    onChanged: (value) {
-      setState(() {
-        isAnonymous = value;
-      });
-    },
-  ),
-  const SizedBox(height: 10),
-],
+                          if (currentUserRole == 'patient') ...[ 
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text(
+                              "Post anonymously",
+                               style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                            value: isAnonymous,
+                            onChanged: (value) {
+                            setState(() {
+                           isAnonymous = value;
+                             });
+                             },
+                           ),
+                           const SizedBox(height: 10),
+                          ],
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(

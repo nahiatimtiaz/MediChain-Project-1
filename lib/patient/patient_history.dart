@@ -1,12 +1,12 @@
-import 'dart:io';
+// import 'dart:io';
 //import 'package:go_router/go_router.dart';
-import 'package:file_picker/file_picker.dart';
+// import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-//import 'package:open_filex/open_filex.dart';
-import 'package:path/path.dart' as path;
+// //import 'package:open_filex/open_filex.dart';
+// import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
+// import 'package:url_launcher/url_launcher.dart';
 
 class PatientHistoryPage extends StatefulWidget {
   const PatientHistoryPage({super.key});
@@ -68,57 +68,6 @@ class _PatientHistoryPageState extends State<PatientHistoryPage> {
     }
   }
 
-  // Future<void> uploadReport(String visitId) async {
-  //   try {
-  //     FilePickerResult? result = await FilePicker.platform.pickFiles(
-  //       type: FileType.custom,
-  //       allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-  //     );
-
-  //     if (result == null) return;
-
-  //     final file = File(result.files.single.path!);
-
-  //     final fileName =
-  //         "${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}";
-
-  //     await supabase.storage.from('medical-reports').upload(
-  //           fileName,
-  //           file,
-  //         );
-
-  //     final fileUrl = supabase.storage
-  //         .from('medical-reports')
-  //         .getPublicUrl(fileName);
-
-  //     await supabase.from('reports').insert({
-  //       'visit_id': visitId,
-  //       'file_url': fileUrl,
-  //       'report_type': result.files.single.extension,
-  //     });
-
-  //     fetchPrescriptions();
-
-  //     if (mounted) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(
-  //           content: Text("Report Uploaded"),
-  //         ),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     debugPrint("UPLOAD ERROR: $e");
-  //   }
-  // }
-
-  // Future<void> openReport(String url) async {
-  //   final uri = Uri.parse(url);
-
-  //   if (await canLaunchUrl(uri)) {
-  //     await launchUrl(uri);
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -136,7 +85,7 @@ class _PatientHistoryPageState extends State<PatientHistoryPage> {
                     itemCount: prescriptions.length,
                     itemBuilder: (context, index) {
                       final prescription = prescriptions[index];
-                      final reports = prescription ['reports'] ?? [];
+                      // final reports = prescription ['reports'] ?? [];
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 20),
@@ -214,75 +163,6 @@ class _PatientHistoryPageState extends State<PatientHistoryPage> {
                               prescription['notes'] ?? '',
                             ),
                             const SizedBox(height: 20),
-                            // const Text(
-                            //   "Medical Reports",
-                            //   style: TextStyle(
-                            //     fontWeight: FontWeight.bold,
-                            //     fontSize: 17,
-                            //   ),
-                            // ),
-                            // const SizedBox(height: 12),
-                            // reports.isEmpty
-                            //     ? Text(
-                            //         "No reports uploaded",
-                            //         style: TextStyle(
-                            //           color: Colors.grey.shade600,
-                            //         ),
-                            //       )
-                            //     : Column(
-                            //         children: reports.map<Widget>((report) {
-                            //           return Container(
-                            //             margin:
-                            //                 const EdgeInsets.only(bottom: 10),
-                            //             padding: const EdgeInsets.all(14),
-                            //             decoration: BoxDecoration(
-                            //               color: Colors.grey.shade100,
-                            //               borderRadius:
-                            //                   BorderRadius.circular(14),
-                            //             ),
-                            //             child: Row(
-                            //               children: [
-                            //                 const Icon(
-                            //                   Icons.description,
-                            //                   color: Colors.blue,
-                            //                 ),
-                            //                 const SizedBox(width: 12),
-                            //                 Expanded(
-                            //                   child: Text(
-                            //                     report['report_type'] ??
-                            //                         'Report',
-                            //                   ),
-                            //                 ),
-                                            // TextButton(
-                                            //   onPressed: () {
-                                            //     openReport(report['file_url']);
-                                            //   },
-                                            //   child: const Text("Open"),
-                                            // )
-                                  //         ],
-                                  //       ),
-                                  //     );
-                                  //   }).toList(),
-                                  // ),
-                            // const SizedBox(height: 18),
-                            // Align(
-                            //   alignment: Alignment.centerRight,
-                            //   child: ElevatedButton.icon(
-                            //     onPressed: () {
-                            //       uploadReport(prescription['id']);
-                            //     },
-                            //     icon: const Icon(Icons.upload),
-                            //     label: const Text("Upload Report"),
-                            //     style: ElevatedButton.styleFrom(
-                            //       backgroundColor: Colors.blue,
-                            //       foregroundColor: Colors.white,
-                            //       padding: const EdgeInsets.symmetric(
-                            //         horizontal: 18,
-                            //         vertical: 12,
-                            //       ),
-                            //     ),
-                            //   ),
-                            // ),
                           ],
                         ),
                       );

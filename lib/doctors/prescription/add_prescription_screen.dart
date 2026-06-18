@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/doctor_models/prescription_model.dart';
 import '../../data/services/doctor_services/prescription_service.dart';
@@ -56,46 +54,9 @@ class _AddPrescriptionScreenState extends State<AddPrescriptionScreen> {
     setState(() => _medicines.removeAt(index));
   }
 
-  // Future<void> _pickReport() async {
-  //   final result = await FilePicker.platform.pickFiles(
-  //     type: FileType.custom,
-  //     allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-  //     withData: true,
-  //   );
-
-  //   if (result != null) {
-  //     setState(() {
-  //       if (kIsWeb) {
-  //         _selectedReport = result.files.single;
-  //       } else {
-  //         _selectedReport = io.File(result.files.single.path!);
-  //       }
-  //     });
-  //   }
-  // }
-
-  // Future<void> _pickFollowUpDate() async {
-  //   final date = await showDatePicker(
-  //     context: context,
-  //     initialDate: DateTime.now().add(const Duration(days: 7)),
-  //     firstDate: DateTime.now(),
-  //     lastDate: DateTime.now().add(const Duration(days: 365)),
-  //   );
-  //   if (date != null) setState(() => _followUpDate = date);
-  // }
-
+  
   Future<void> _savePrescription() async {
-    //  if (_selectedReport != null && _reportNameController.text.isNotEmpty) {
-
-    //     final fileToUpload = kIsWeb ? _selectedReport!.bytes : _selectedReport;
-
-    //     await _prescriptionService.uploadReport(
-    //       widget.extra['patient_id'],
-    //       widget.extra['doctor_id'],
-    //       fileToUpload,
-    //       _reportNameController.text.trim(),
-    //     );
-    //    }
+  
 
     setState(() => _isLoading = true);
 
@@ -121,14 +82,7 @@ class _AddPrescriptionScreenState extends State<AddPrescriptionScreen> {
 
     final success = await _prescriptionService.addPrescription(prescription);
 
-    // if (_selectedReport != null && _reportNameController.text.isNotEmpty) {
-    //   await _prescriptionService.uploadReport(
-    //     widget.extra['patient_id'],
-    //     widget.extra['doctor_id'],
-    //     _selectedReport!,
-    //     _reportNameController.text.trim(),
-    //   );
-    // }
+
 
     setState(() => _isLoading = false);
 
@@ -276,60 +230,6 @@ class _AddPrescriptionScreenState extends State<AddPrescriptionScreen> {
       ),
 
       const SizedBox(height: 20),
-
-      // Follow up date
-      // _buildLabel('Follow Up Date'),
-      // InkWell(
-      //   onTap: _pickFollowUpDate,
-      //   child: Container(
-      //     width: double.infinity,
-      //     padding: const EdgeInsets.all(14),
-      //     decoration: BoxDecoration(
-      //       color: Colors.white,
-      //       borderRadius: BorderRadius.circular(8),
-      //       border: Border.all(color: AppColors.border),
-      //     ),
-      //     child: Row(
-      //       children: [
-      //         Icon(Icons.calendar_today,
-      //             color: AppColors.textSecondary, size: 18),
-      //         const SizedBox(width: 8),
-      //         // Text(
-      //         //   _followUpDate != null
-      //         //       ? DateFormat('MMM d, yyyy').format(_followUpDate!)
-      //         //       : 'Select follow up date',
-      //         //   style: TextStyle(
-      //         //     color: _followUpDate != null
-      //         //         ? AppColors.textPrimary
-      //         //         : AppColors.textSecondary,
-      //         //   ),
-      //         // ),
-      //       ],
-      //     ),
-      //   ),
-      // ),
-      const SizedBox(height: 20),
-
-      // Upload Report
-      // _buildLabel('Upload Report (Optional)'),
-      // TextFormField(
-      //   controller: _reportNameController,
-      //   decoration: const InputDecoration(hintText: 'Report name'),
-      // ),
-      // const SizedBox(height: 8),
-      // OutlinedButton.icon(
-      //   onPressed: _pickReport,
-      //   icon: const Icon(Icons.upload_file),
-      //   label: Text(
-      //     _selectedReport != null
-      //         ? 'File selected ✓'
-      //         : 'Choose File (PDF/Image)',
-      //   ),
-      //   style: OutlinedButton.styleFrom(
-      //     minimumSize: const Size(double.infinity, 48),
-      //   ),
-      // ),
-      const SizedBox(height: 32),
 
       ElevatedButton(
         onPressed: _isLoading ? null : _savePrescription,

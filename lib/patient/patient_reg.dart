@@ -94,11 +94,8 @@ Future<void> _registerPatient() async {
       _showSnackBar(error.message, Colors.red);
     } catch (error) {
       if (!mounted) return;
-      debugPrint("╔═════════════ SUPABASE DATABASE ERROR ═════════════");
-      debugPrint("║ Type: ${error.runtimeType}");
-      debugPrint("║ Error: $error");
-      debugPrint("╚═══════════════════════════════════════════════════");
-
+      debugPrint("Type: ${error.runtimeType}");
+      debugPrint("Error: $error");
       _showSnackBar('An unexpected error occurred: $error', Colors.red);
     } finally {
       if (mounted) {

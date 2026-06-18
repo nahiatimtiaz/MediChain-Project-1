@@ -5,7 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../../data/services/doctor_services/doctor_auth_service.dart';
 import '../../data/services/doctor_services/prescription_service.dart';
 import '../../data/models/doctor_models/prescription_model.dart';
-import '../../data/models/doctor_models/medical_report_model.dart';
+// import '../../data/models/doctor_models/medical_report_model.dart';
 import '../../data/models/doctor_models/patient_model.dart';
 
 class PatientDetailScreen extends StatefulWidget {
@@ -260,60 +260,60 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
     );
   }
 
-  // Report card
-  Widget _buildReportCard(MedicalReportModel report) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.description, color: AppColors.primary),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  report.reportName,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  report.createdAt != null
-                      ? DateFormat('MMM d, yyyy').format(report.createdAt!)
-                      : '',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // View report button
-          IconButton(
-            icon: Icon(Icons.open_in_new, color: AppColors.primary),
-            onPressed: () {
-              // Open report URL
-            },
-          ),
-        ],
-      ),
-    );
-  }
+  // // Report card
+  // Widget _buildReportCard(MedicalReportModel report) {
+  //   return Container(
+  //     margin: const EdgeInsets.only(bottom: 12),
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(12),
+  //       boxShadow: [
+  //         BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+  //       ],
+  //     ),
+  //     child: Row(
+  //       children: [
+  //         Container(
+  //           padding: const EdgeInsets.all(12),
+  //           decoration: BoxDecoration(
+  //             color: AppColors.primary.withOpacity(0.1),
+  //             borderRadius: BorderRadius.circular(8),
+  //           ),
+  //           child: Icon(Icons.description, color: AppColors.primary),
+  //         ),
+  //         const SizedBox(width: 16),
+  //         Expanded(
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text(
+  //                 report.reportName,
+  //                 style: const TextStyle(fontWeight: FontWeight.w600),
+  //               ),
+  //               Text(
+  //                 report.createdAt != null
+  //                     ? DateFormat('MMM d, yyyy').format(report.createdAt!)
+  //                     : '',
+  //                 style: TextStyle(
+  //                   color: AppColors.textSecondary,
+  //                   fontSize: 13,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //         // View report button
+  //         IconButton(
+  //           icon: Icon(Icons.open_in_new, color: AppColors.primary),
+  //           onPressed: () {
+  //             // Open report URL
+  //           },
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   // Empty state card
   Widget _buildEmptyCard(String message) {
