@@ -103,7 +103,7 @@ Animation<double>: A value tracker that interpolates decimal numbers (from 0.0 t
     });
   }
 
-  Future<void> _checkExistingSession() async {
+ Future<void> _checkExistingSession() async {
     if (!mounted) return;
 
     // 1. Grab the current active session from Supabase
@@ -111,7 +111,51 @@ Animation<double>: A value tracker that interpolates decimal numbers (from 0.0 t
 
     // 2. Smart routing decision based on login state
     if (session != null) {
-      context.go('/patient-home-page');
+      final userId = session.user.id;
+
+      try {
+        // --- STEP A: Check if the user is a Patient ---
+        final patientCheck = await Supabase.instance.client
+            .from('patients') // Looks at your separate patients table
+            .select('id')
+            .eq('id', userId)
+            .maybeSingle();   // returns null instead of throwing an error if not found
+
+        if (patientCheck != null) {
+          context.go('/patient-home-page');
+          return; // Stop running the rest of the function!
+        }
+
+        // --- STEP B: Check if the user is a Doctor ---
+        final doctorCheck = await Supabase.instance.client
+            .from('doctors')  // Looks at your separate doctors table
+            .select('id')
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (doctorCheck != null) {
+          context.go('/doctor-home-page');
+          return; 
+        }
+
+       
+        final adminCheck = await Supabase.instance.client
+            .from('admins')   // Looks at your separate admins table
+            .select('id')
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (adminCheck != null) {
+          context.go('/admin-home-page');
+          return; 
+        }
+
+       
+        context.go('/patient-login');
+
+      } catch (e) {
+        context.go('/patient-login');
+      }
     } else {
       context.go('/patient-login');
     }
