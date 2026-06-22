@@ -4,7 +4,6 @@ import '../../models/doctor_models/appointment_model.dart';
 class ScheduleService {
   final _supabase = Supabase.instance.client;
 
-  // Get all appointments for a doctor on a specific date
   Future<List<AppointmentModel>> getAppointmentsByDate(
     String doctorId,
     DateTime date,
@@ -26,7 +25,6 @@ class ScheduleService {
     }
   }
 
-  // Get all appointment dates for a doctor (for calendar)
   Future<List<DateTime>> getAppointmentDates(String doctorId) async {
     try {
       final response = await _supabase
@@ -44,7 +42,6 @@ class ScheduleService {
     }
   }
 
-  // Update appointment status
   Future<bool> updateAppointmentStatus(
     String appointmentId,
     String status,
@@ -60,7 +57,6 @@ class ScheduleService {
     }
   }
 
-  // Get daily patient count for a doctor
   Future<int> getDailyPatientCount(String doctorId, DateTime date) async {
     try {
       final dateStr = date.toIso8601String().split('T')[0];
@@ -77,7 +73,6 @@ class ScheduleService {
     }
   }
 
-  // Block a date for doctor
   Future<bool> blockDate(String doctorId, DateTime date, String reason) async {
     try {
       await _supabase.from('doctor_blocked_dates').insert({
@@ -91,7 +86,6 @@ class ScheduleService {
     }
   }
 
-  // Get blocked dates for a doctor
   Future<List<DateTime>> getBlockedDates(String doctorId) async {
     try {
       final response = await _supabase
@@ -107,7 +101,6 @@ class ScheduleService {
     }
   }
 
-  // Unblock a date
   Future<bool> unblockDate(String doctorId, DateTime date) async {
     try {
       final dateStr = date.toIso8601String().split('T')[0];

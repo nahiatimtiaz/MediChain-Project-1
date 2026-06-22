@@ -25,7 +25,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   bool _isLoading = true;
   int _dailyCount = 0;
 
-  // Mini calendar days strip
   late List<DateTime> _weekDays;
 
   @override

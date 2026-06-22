@@ -116,7 +116,6 @@ class _PatientSearchScreenState extends State<PatientSearchScreen> {
 
             const SizedBox(height: 20),
 
-            // Not found
             if (_notFound)
               Container(
                 width: double.infinity,
@@ -142,7 +141,6 @@ class _PatientSearchScreenState extends State<PatientSearchScreen> {
                 ),
               ),
 
-            // Patient card
             if (_foundPatient != null) _buildPatientCard(_foundPatient!),
           ],
         ),
@@ -208,7 +206,6 @@ class _PatientSearchScreenState extends State<PatientSearchScreen> {
           const Divider(),
           const SizedBox(height: 8),
 
-          // Details
           Wrap(
             spacing: 16,
             runSpacing: 8,
@@ -221,7 +218,6 @@ class _PatientSearchScreenState extends State<PatientSearchScreen> {
             ],
           ),
 
-          // Allergy warning
           if (patient.allergies != null && patient.allergies!.isNotEmpty) ...[
             const SizedBox(height: 12),
             Container(

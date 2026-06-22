@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class StorageService {
   final _supabase = Supabase.instance.client;
 
-  // --- Upload Doctor Image ---
   Future<String?> uploadDoctorImage(File imageFile, String doctorEmail) async {
     try {
       final fileName =
@@ -22,7 +21,6 @@ class StorageService {
     }
   }
 
-  // --- Upload Admin Image ---
   Future<String?> uploadAdminImage(File imageFile, String adminId) async {
     try {
       final fileName =
@@ -47,10 +45,8 @@ class StorageService {
           '${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final filePath = 'patients/$fileName';
 
-      // Upload image to Supabase storage bucket 'patient-images'
       await _supabase.storage.from('patient-images').upload(filePath, imageFile);
 
-      // Get public URL of uploaded image
       final imageUrl = _supabase.storage
           .from('patient-images')
           .getPublicUrl(filePath);
@@ -61,8 +57,6 @@ class StorageService {
     }
   }
 
-  // Delete old image from storage
-  // --- Delete Image ---
   Future<void> deleteImage(String bucket, String imageUrl) async {
     try {
       final uri = Uri.parse(imageUrl);
@@ -73,7 +67,7 @@ class StorageService {
 
       await _supabase.storage.from(bucket).remove([filePath]);
     } catch (e) {
-      // Fail silently
+    
     }
   }
 }

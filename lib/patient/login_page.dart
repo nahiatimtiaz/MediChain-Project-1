@@ -19,7 +19,6 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
   bool _passwordVisible = false;
 
   Future<void> _loginPatient() async {
-    // Validation
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -35,7 +34,7 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
     });
 
     try {
-      // Supabase Login
+
       await _supabase.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -97,7 +96,7 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
   body: Column(
     children: [
 
-      // Header
+     
       Container(
         width: double.infinity,
         decoration: const BoxDecoration(
@@ -190,7 +189,6 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> {
         ),
       ),
 
-      // Form Section
       Expanded(
         child: Container(
           width: double.infinity,

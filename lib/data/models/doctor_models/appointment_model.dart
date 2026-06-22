@@ -10,12 +10,11 @@ class AppointmentModel {
   final String status;
   final DateTime? createdAt;
 
-  // --- Joined Patient Info ---
+
   final String? patientName;
   final String? patientPhone;
   final String? patientUniqueId;
 
-  // --- Constructor ---
   AppointmentModel({
     this.id,
     this.appointmentId,
@@ -31,7 +30,6 @@ class AppointmentModel {
     this.patientUniqueId,
   });
 
-  // --- From JSON ---
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
     return AppointmentModel(
       id: json['id'],
@@ -53,7 +51,6 @@ class AppointmentModel {
     );
   }
 
-  // --- To JSON ---
   Map<String, dynamic> toJson() {
     return {
       'doctor_id': doctorId,

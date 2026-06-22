@@ -66,7 +66,6 @@ class _HomePageState extends State<HomePage> {
           .eq('id', user.id)
           .maybeSingle();
 
-      // FIX: Guard against async unmounting drops
       if (!mounted) return;
 
       if (response != null) {
@@ -199,7 +198,6 @@ class _HomePageState extends State<HomePage> {
   if (confirmed != true) return;
 
   try {
-    // Delete from Supabase
     await supabase.from('appointments').delete().eq('id', appointmentDbId);
 
     if (!mounted) return;

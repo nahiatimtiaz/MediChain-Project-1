@@ -16,7 +16,7 @@ class DoctorMainLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: child, // Renders the active screen child seamlessly
+      body: child, 
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -25,10 +25,10 @@ class DoctorMainLayout extends StatelessWidget {
         child: SafeArea(
           top: false,
           child: BottomNavigationBar(
-            currentIndex: currentIndex, // Relies completely on index handed by AppRouter
+            currentIndex: currentIndex, 
             backgroundColor: Colors.transparent,
             elevation: 0,
-            type: BottomNavigationBarType.fixed, // Keeps labels steady
+            type: BottomNavigationBarType.fixed, 
             selectedItemColor: AppColors.bluePrimary,
             unselectedItemColor: AppColors.textTertiary,
             selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),

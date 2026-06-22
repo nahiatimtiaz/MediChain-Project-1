@@ -27,7 +27,6 @@ class PatientModel {
     this.createdAt,
   });
 
-  // Convert Supabase JSON to PatientModel
   factory PatientModel.fromJson(Map<String, dynamic> json) {
     return PatientModel(
       id: json['id'],
@@ -49,7 +48,6 @@ class PatientModel {
     );
   }
 
-  // Convert PatientModel to JSON for Supabase
   Map<String, dynamic> toJson() {
     return {
       'full_name': fullName,

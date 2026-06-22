@@ -23,19 +23,15 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
   bool _isLoading = false;
   bool _passwordVisible = false;
 
-  // 1. Bangladesh Phone Number Regex (Supports +8801X..., 8801X..., or 01X...)
   final RegExp _bdPhoneRegex = RegExp(r'^(?:\+88|88)?(01[3-9]\d{8})$');
 
-  // 2. Strict Email Validation Regex
   final RegExp _emailRegex = RegExp(
     r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
   );
 
-  // 3. Strong Password Regex (Min 8 chars, at least 1 letter and 1 number)
   final RegExp _passwordRegex = RegExp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$');
 
 Future<void> _registerPatient() async {
-    // Basic validation before hitting Supabase
     if (!_formKey.currentState!.validate()) {
       return; 
     }
@@ -75,13 +71,11 @@ Future<void> _registerPatient() async {
 
       if (!mounted) return;
 
-      // 🔥 FIX: Check if email confirmation link is pending
+
       if (response.session == null) {
-        // We capture the email text *before* clearing the controllers so the pop-up reads it
         final String registeredEmail = _emailController.text.trim();
         _clearControllers();
-        
-        // Show the dialog box and STOP execution here (do not proceed to home page)
+
         _showVerificationDialog(registeredEmail);
       } else {
         _showSnackBar('Registration successful! Welcome.', Colors.green);
@@ -250,7 +244,6 @@ void _showVerificationDialog(String userEmail) {
             ),
           ),
 
-          // Form Section
           Expanded(
             child: Container(
               width: double.infinity,
@@ -274,7 +267,7 @@ void _showVerificationDialog(String userEmail) {
                       ),
                       const SizedBox(height: 28),
 
-                      // First Name
+                      
                       TextFormField(
                         controller: _firstNameController,
                         decoration: InputDecoration(
@@ -286,7 +279,7 @@ void _showVerificationDialog(String userEmail) {
                       ),
                       const SizedBox(height: 16),
 
-                      // Last Name
+                     
                       TextFormField(
                         controller: _lastNameController,
                         decoration: InputDecoration(
@@ -298,7 +291,6 @@ void _showVerificationDialog(String userEmail) {
                       ),
                       const SizedBox(height: 16),
 
-                      // Email Field with Validation
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -315,7 +307,6 @@ void _showVerificationDialog(String userEmail) {
                       ),
                       const SizedBox(height: 16),
 
-                      // Phone Field with BD Validation
                       TextFormField(
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
@@ -334,7 +325,6 @@ void _showVerificationDialog(String userEmail) {
                       ),
                       const SizedBox(height: 16),
 
-                      // Password Field with Regex Validation
                       TextFormField(
                         controller: _passwordController,
                         obscureText: !_passwordVisible,
@@ -365,7 +355,7 @@ void _showVerificationDialog(String userEmail) {
                       ),
                       const SizedBox(height: 16),
 
-                      // Confirm Password
+
                       TextFormField(
                         controller: _confirmPasswordController,
                         obscureText: !_passwordVisible,

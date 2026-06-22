@@ -195,19 +195,16 @@ Future<void> _changePassword() async {
       throw Exception("User email not found.");
     }
 
-    // Step 1: Verify the current password by attempting a silent re-login check
     await _supabase.auth.signInWithPassword(
       email: email,
       password: _currentPasswordController.text.trim(),
     );
 
-    // Step 2: If the sign-in doesn't throw an error, it means the current password is correct.
-    // Proceed to update the password safely.
     await _supabase.auth.updateUser(
       UserAttributes(password: _newPasswordController.text.trim()),
     );
 
-    // Clear forms cleanly on success
+  
     _currentPasswordController.clear();
     _newPasswordController.clear();
     _confirmPasswordController.clear();
@@ -492,7 +489,6 @@ Future<void> _changePassword() async {
                 if (v == null || v.trim().isEmpty) return 'New password is required';
                 if (v.length < 8) return 'Password must be at least 8 characters long';
                 
-                // 🔥 ENHANCED REGEX PATTERN: Requires 1 Uppercase, 1 Lowercase, 1 Number, allows special characters
                 final passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$');
                 if (!passwordRegex.hasMatch(v)) {
                   return 'Must include uppercase, lowercase, and a number';

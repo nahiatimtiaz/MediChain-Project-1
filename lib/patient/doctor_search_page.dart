@@ -21,7 +21,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
 
   final searchController = TextEditingController();
 
-  // Filter States
   double? maxConsultationFee;
   String? selectedDayFilter;
 
@@ -39,16 +38,15 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
     required String startTimeStr,
     required String endTimeStr,
     required int durationMinutes,
-    required DateTime? selectedDate, // 👈 Pass the chosen date here
+    required DateTime? selectedDate, 
   }) {
     List<Map<String, dynamic>> slots = [];
 
     int parseTimeToMinutes(String? timeStr) {
-      // Return a default of 0 (or 540 for 9:00 AM) if the input is empty or null
       if (timeStr == null ||
           timeStr.toLowerCase() == 'empty' ||
           timeStr.trim().isEmpty) {
-        return 540; // Default: 9:00 AM in minutes
+        return 540; 
       }
 
       try {
@@ -57,7 +55,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
         int minute = 0;
 
         if (cleanStr.contains('am') || cleanStr.contains('pm')) {
-          // Remove all non-numeric characters except ':' for parsing
           final timePart = cleanStr.replaceAll(RegExp(r'[^0-9:]'), '').trim();
           final parts = timePart.split(':');
 
@@ -74,7 +71,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
 
         return (hour * 60) + minute;
       } catch (e) {
-        // If any parsing error occurs, return default 9:00 AM
         return 540;
       }
     }
@@ -90,7 +86,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
     int startMinutes = parseTimeToMinutes(startTimeStr);
     final int endMinutes = parseTimeToMinutes(endTimeStr);
 
-    // Check if the selected date is today
     bool isToday = false;
     int currentMinutesSinceMidnight = 0;
 
@@ -111,7 +106,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
       String slotEndStr = formatMinutesToTime(slotEndMinutes);
       String slotString = "$slotStartStr - $slotEndStr";
 
-      // A slot has passed if it's today AND the slot's start time is earlier than right now
       bool hasPassed = isToday && (startMinutes <= currentMinutesSinceMidnight);
 
       slots.add({'slotText': slotString, 'hasPassed': hasPassed});
@@ -138,7 +132,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
     try {
       final response = await supabase.from('doctors').select();
 
-      // Map incoming database JSON arrays straight into typed DoctorModel instances
       final List<DoctorModel> loadedDoctors = (response as List)
           .map((json) => DoctorModel.fromJson(json))
           .toList();
@@ -156,7 +149,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
     }
   }
 
-  // Real-time query matrix utilizing the strictly typed model fields
   void filterDisplay() {
     final query = searchController.text.toLowerCase();
 
@@ -169,7 +161,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
           .map((e) => e.toLowerCase())
           .toList();
 
-      // Check Matchers
       final matchesSearch = name.contains(query) || department.contains(query);
       final matchesFee =
           maxConsultationFee == null || fee <= maxConsultationFee!;
@@ -199,21 +190,12 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
     );
   }
 
-  // --- BOOKING BOTTOM SHEET PIPELINE WITH DYNAMIC SLOT GENERATION ---
   void _showBookingSheet(DoctorModel doctor) {
     DateTime? chosenDate;
     String? chosenSlot;
     bool isCheckingSlots = false;
     bool isSubmitting = false;
     List<String> disabledSlots = [];
-
-    // // Trigger dynamic slot collection matrix parsing from DoctorModel directly
-    // final List<Map<String, dynamic>> computedDoctorSlots = doctor.generateTimeSlots(
-    //   startTimeStr: doctor.startTime ?? "15:00",
-    //   endTimeStr: doctor.endTime ?? "18:00",
-    //   durationMinutes: doctor.slotDuration ?? 15,
-    //   selectedDate: chosenDate, // 👈 This will be updated dynamically when the user picks a date
-    // );
 
     showModalBottomSheet(
       context: context,
@@ -224,18 +206,16 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setSheetState) {
-            // Function to query already booked slots for that doctor on a selected date
             Future<void> checkSlotAvailability(DateTime date) async {
               setSheetState(() {
                 isCheckingSlots = true;
-                chosenSlot = null; // Reset slot choice on date change
+                chosenSlot = null;
               });
 
               try {
                 final formattedDateStr =
                     "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
 
-                // Fetch existing appointments matching doctor UUID string
                 final existingBookings = await supabase
                     .from('appointments')
                     .select('time_slot')
@@ -259,7 +239,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
               });
             }
 
-            // Function execution to save record to Supabase appointments table
             Future<void> confirmBooking() async {
               if (chosenDate == null || chosenSlot == null) return;
 
@@ -275,7 +254,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                 final dateStr =
                     "${chosenDate!.year}-${chosenDate!.month.toString().padLeft(2, '0')}-${chosenDate!.day.toString().padLeft(2, '0')}";
 
-                // 1. Count existing entries on that date to determine the serial number
                 final countResponse = await supabase
                     .from('appointments')
                     .select('id')
@@ -284,11 +262,9 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
 
                 final int nextSerialNumber = (countResponse as List).length + 1;
 
-                // 2. Generate unique tracking identifier string
                 final randomNum = Random().nextInt(90000) + 10000;
                 final generatedAppId = "MC-$randomNum";
 
-                // 3. Insert data record maps cleanly into Supabase architecture
                 await supabase.from('appointments').insert({
                   'appointment_id': generatedAppId,
                   'doctor_id': doctor.id,
@@ -390,7 +366,7 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                     ),
                     trailing: const Icon(Icons.arrow_drop_down),
                     onTap: () async {
-                      // 1. Map integers to weekday strings
+                    
                       final List<String> indexToDayMap = [
                         '',
                         'Monday',
@@ -402,7 +378,7 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                         'Sunday',
                       ];
 
-                      // Helper to check if a specific date is allowed by this doctor
+             
                       bool isDayAvailable(DateTime date) {
                         String currentGridDay = indexToDayMap[date.weekday];
                         return doctor.availableDays.any(
@@ -412,11 +388,9 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                         );
                       }
 
-                      // 2. Find the closest valid initial date starting from today
                       DateTime calculatedInitialDate = DateTime.now();
                       bool foundValidDate = false;
 
-                      // Search up to 30 days ahead for the first day this doctor actually works
                       for (int i = 0; i < 30; i++) {
                         DateTime checkDate = DateTime.now().add(
                           Duration(days: i),
@@ -428,7 +402,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                         }
                       }
 
-                      // Fallback: If doctor has no valid days configured, don't open the picker
                       if (!foundValidDate) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -441,11 +414,11 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                         return;
                       }
 
-                      // 3. Now safely open the picker with a guaranteed valid initialDate
+  
                       final DateTime? picked = await showDatePicker(
                         context: context,
                         initialDate:
-                            calculatedInitialDate, // 👈 Safe initial position
+                            calculatedInitialDate, 
                         firstDate: DateTime.now(),
                         lastDate: DateTime.now().add(const Duration(days: 30)),
                         selectableDayPredicate: (DateTime date) {
@@ -463,8 +436,7 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                   ),
                   const SizedBox(height: 15),
 
-                  // Dynamic Slot Chip Grid Generation
-                  // Dynamic Slot Chip Grid Generation
+
                   if (chosenDate != null) ...[
                     const Text(
                       "Select Time Slot",
@@ -481,17 +453,17 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                           child: CircularProgressIndicator(),
                         ),
                       )
-                    // Quick safety check if doctor data isn't missing
+
                     else
                       () {
-                        // Generate the slots on the fly using the doctor data properties
+  
                         final List<Map<String, dynamic>> computedDoctorSlots =
                             generateTimeSlots(
                               startTimeStr: doctor.startTime ?? "15:00",
                               endTimeStr: doctor.endTime ?? "18:00",
                               durationMinutes: doctor.slotDuration ?? 15,
                               selectedDate:
-                                  chosenDate, // 👈 Passing the active date
+                                  chosenDate, 
                             );
 
                         if (computedDoctorSlots.isEmpty) {
@@ -527,7 +499,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                                   ? Colors.grey.shade200
                                   : Colors.blue.shade50,
                               disabledColor: Colors.grey.shade200,
-                              // If it's booked or passed, set onSelected to null to completely disable it
                               onSelected: isUnavailable
                                   ? null
                                   : (selected) {
@@ -704,7 +675,6 @@ class _DoctorSearchPageState extends State<DoctorSearchPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Main Doctors Feed List
                     Expanded(
                       child: filteredDoctors.isEmpty
                           ? const Center(child: Text("No doctors found"))

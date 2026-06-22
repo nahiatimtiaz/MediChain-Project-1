@@ -115,46 +115,51 @@ class _CommunityPageState extends State<CommunityPage> {
       return null;
     }
   }
+Future<void> createPost() async {
+  if (postController.text.trim().isEmpty) return;
 
-  Future<void> createPost() async {
-    if (postController.text.trim().isEmpty) return;
+  try {
+    setState(() {
+      isPosting = true;
+    });
 
-    try {
-      setState(() {
-        isPosting = true;
-      });
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
 
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+    final profile = await _getUserProfile(user.id);
+    
+    final String confirmedRole = profile?['role'] ?? 'patient';
+    final String confirmedName = profile?['full_name'] ?? 'Community Member';
+    final bool verifiedDoctorStatus = profile?['is_verified'] ?? false;
 
-      final profile = await _getUserProfile(user.id);
+    await supabase.from('posts').insert({
+      'user_id': user.id,
+      'user_role': confirmedRole, 
+      'full_name': confirmedName,
+      'profile_image_url': profile?['profile_image_url'],
+      'content': postController.text.trim(),
+      'category': selectedCategory,
+      'is_anonymous': confirmedRole == 'patient' ? isAnonymous : false, //this is where we make sure only patients can post anonymously
+      'is_verified_doctor': confirmedRole == 'doctor' ? verifiedDoctorStatus : false,
+    });
 
-      await supabase.from('posts').insert({
-        'user_id': user.id,
-        'user_role': profile?['role'] ?? 'patient',
-        'full_name': profile?['full_name'] ?? 'Unknown User',
-        'profile_image_url': profile?['profile_image_url'],
-        'content': postController.text.trim(),
-        'category': selectedCategory,
-        'is_anonymous': profile?['role'] == 'patient' ? isAnonymous : false,
-        'is_verified_doctor': profile?['is_verified'] ?? false,
-      });
+    postController.clear();
+    setState(() {
+      isAnonymous = false;
+      selectedCategory = "General Discussion";
+    });
 
-      postController.clear();
-      setState(() {
-        isAnonymous = false;
-        selectedCategory = "General Discussion";
-      });
-
-      fetchPosts();
-    } catch (e) {
-      debugPrint("CREATE POST ERROR: $e");
-    } finally {
+    fetchPosts();
+  } catch (e) {
+    debugPrint("CREATE POST ERROR: $e");
+  } finally {
+    if (mounted) {
       setState(() {
         isPosting = false;
       });
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -464,13 +469,10 @@ class _PostCardState extends State<PostCard> {
   }
 
   String formatDate(String date) {
-  // 1. Parse the raw database timestamp string
   final parsed = DateTime.parse(date);
   
-  // 2. 🔥 Convert it to the user's physical phone timezone (e.g., BST for Bangladesh)
   final localDateTime = parsed.toLocal(); 
-  
-  // 3. Format your new localized date and time safely
+
   return DateFormat('dd MMM yyyy • hh:mm a').format(localDateTime);
 }
 

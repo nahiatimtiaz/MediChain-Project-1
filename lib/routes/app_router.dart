@@ -104,7 +104,6 @@ class AppRouter {
       GoRoute(
         path: '/doctor-prescription',
         builder: (context, state) {
-          // Safely cast or fallback to an empty map instead of crashing out with a null type error
           final args = state.extra as Map<String, dynamic>? ?? {};
           return AddPrescriptionScreen(extra: args);
         },

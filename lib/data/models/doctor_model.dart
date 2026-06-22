@@ -85,11 +85,9 @@ class DoctorModel {
   }
 
   List<String> generateTimeSlots() {
-    // Priority to chamber timings
     final startStr = chamberStartTime ?? startTime;
     final endStr = chamberEndTime ?? endTime;
 
-    // Return fallback if time values are missing or empty to prevent blank screens
     if (startStr == null ||
         endStr == null ||
         startStr.isEmpty ||
@@ -104,7 +102,6 @@ class DoctorModel {
         final normalized = timeStr.toLowerCase().trim();
         final parts = normalized.split(':');
 
-        // Prevent FormatException if format is invalid
         if (parts.length < 2) return 0;
 
         int hour = int.tryParse(parts[0]) ?? 0;
@@ -122,7 +119,6 @@ class DoctorModel {
       int currentMinutes = parseToTotalMinutes(startStr);
       final int endMinutes = parseToTotalMinutes(endStr);
 
-      // Prevent infinite loop or invalid range
       if (endMinutes <= currentMinutes) {
         return ["09:00 AM", "11:00 AM"];
       }

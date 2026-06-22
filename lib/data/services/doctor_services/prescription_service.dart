@@ -7,7 +7,6 @@ import '../../models/doctor_models/medical_report_model.dart';
 class PrescriptionService {
   final _supabase = Supabase.instance.client;
 
-  // Search patient by patient ID
   Future<PatientModel?> searchPatientById(String patientId) async {
     try {
       final response = await _supabase
@@ -22,7 +21,6 @@ class PrescriptionService {
     }
   }
 
-  // Get all prescriptions for a patient
   Future<List<PrescriptionModel>> getPatientPrescriptions(
     String patientId,
   ) async {
@@ -41,7 +39,6 @@ class PrescriptionService {
     }
   }
 
-  // Add new prescription
   Future<bool> addPrescription(PrescriptionModel prescription) async {
     try {
       await _supabase.from('prescriptions').insert(prescription.toJson());
@@ -51,7 +48,6 @@ class PrescriptionService {
     }
   }
 
-  // Get all medical reports for a patient
   Future<List<MedicalReportModel>> getPatientReports(String patientId) async {
     try {
       final response = await _supabase
@@ -68,7 +64,6 @@ class PrescriptionService {
     }
   }
 
-  // Upload medical report file
   Future<bool> uploadReport(
     String patientId,
     String doctorId,
@@ -79,17 +74,14 @@ class PrescriptionService {
       final fileName =
           '${patientId}_${DateTime.now().millisecondsSinceEpoch}.pdf';
 
-      // Upload file to Supabase storage
       await _supabase.storage
           .from('medical-reports')
           .upload('reports/$fileName', file);
 
-      // Get file URL
       final fileUrl = _supabase.storage
           .from('medical-reports')
           .getPublicUrl('reports/$fileName');
 
-      // Save report info in database
       await _supabase.from('medical_reports').insert({
         'patient_id': patientId,
         'doctor_id': doctorId,
@@ -104,7 +96,6 @@ class PrescriptionService {
     }
   }
 
-  // Get patient allergy info
   Future<String?> getPatientAllergies(String patientId) async {
     try {
       final response = await _supabase

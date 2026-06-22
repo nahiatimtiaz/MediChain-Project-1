@@ -1,4 +1,4 @@
-// Admin Data Model
+
 class AdminModel {
   final String id;
   final String fullName;
@@ -18,7 +18,7 @@ class AdminModel {
     this.lastLogin,
   });
 
-  // Convert Supabase JSON to AdminModel
+
   factory AdminModel.fromJson(Map<String, dynamic> json) {
     return AdminModel(
       id: json['id'],
@@ -35,7 +35,6 @@ class AdminModel {
     );
   }
 
-  // Convert AdminModel to JSON for Supabase
   Map<String, dynamic> toJson() {
     return {
       'full_name': fullName,

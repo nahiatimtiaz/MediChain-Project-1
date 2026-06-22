@@ -5,10 +5,10 @@ import '../models/doctor_model.dart';
 class DoctorService {
   final _supabase = Supabase.instance.client;
 
-  // Get all doctors
+ 
   Future<List<DoctorModel>> getAllDoctors() async {
     try {
-      // Fetching doctors with chamber timings
+
       final response = await _supabase
           .from('doctors')
           .select('*, chamber_start_time, chamber_end_time')
@@ -22,7 +22,7 @@ class DoctorService {
     }
   }
 
-  // Add new doctor
+  
   Future<bool> addDoctor(DoctorModel doctor, String password) async {
     try {
       print('Adding doctor: ${doctor.email}');
@@ -71,7 +71,7 @@ class DoctorService {
     }
   }
 
-  // Update existing doctor
+
   Future<bool> updateDoctor(String doctorId, DoctorModel doctor) async {
     try {
       await _supabase
@@ -86,8 +86,8 @@ class DoctorService {
             'available_days': doctor.availableDays,
             'start_time': doctor.startTime,
             'end_time': doctor.endTime,
-            'chamber_start_time': doctor.chamberStartTime, // Added field
-            'chamber_end_time': doctor.chamberEndTime, // Added field
+            'chamber_start_time': doctor.chamberStartTime,
+            'chamber_end_time': doctor.chamberEndTime, 
             'max_patients_per_day': doctor.maxPatientsPerDay,
             'profile_image_url': doctor.profileImageUrl,
           })
@@ -106,10 +106,10 @@ class DoctorService {
     }
   }
 
-  // Search doctors
+
   Future<List<DoctorModel>> searchDoctors(String query) async {
     try {
-      // Searching doctors including chamber timing data
+
       final response = await _supabase
           .from('doctors')
           .select('*, chamber_start_time, chamber_end_time')
@@ -125,10 +125,10 @@ class DoctorService {
     }
   }
 
-  // Filter by department
+
   Future<List<DoctorModel>> filterByDepartment(String department) async {
     try {
-      // Filtering by department with timing data
+  
       final response = await _supabase
           .from('doctors')
           .select('*, chamber_start_time, chamber_end_time')
@@ -142,9 +142,6 @@ class DoctorService {
     }
   }
 
-  // ... (rest of your methods remain unchanged)
-
-  // Delete doctor
   Future<bool> deleteDoctor(String doctorId, String doctorName) async {
     try {
       await _logAction(
@@ -160,7 +157,6 @@ class DoctorService {
     }
   }
 
-  // Toggle doctor active/inactive status
   Future<bool> toggleDoctorStatus(String doctorId, bool newStatus) async {
     try {
       await _supabase
@@ -174,7 +170,6 @@ class DoctorService {
     }
   }
 
-  // Reset doctor password
   Future<bool> resetDoctorPassword(String email, String newPassword) async {
     try {
       await _supabase.rpc(
@@ -189,7 +184,6 @@ class DoctorService {
     }
   }
 
-  // Upload doctor profile image
   Future<String?> uploadDoctorProfileImage(
     File imageFile,
     String doctorId,
@@ -217,7 +211,6 @@ class DoctorService {
     }
   }
 
-  // Save action to audit_logs
   Future<void> _logAction(
     String actionType,
     String targetId,

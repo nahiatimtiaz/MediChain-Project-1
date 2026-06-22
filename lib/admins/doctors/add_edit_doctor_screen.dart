@@ -37,7 +37,7 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
   bool _isLoading = false;
   bool _passwordVisible = false;
 
-  // States for dynamic time slot partitioning
+
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
 
@@ -92,7 +92,7 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
     }
   }
 
-  // Updated Time Picker for Start Time using your method
+
   Future<void> _selectStartTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -103,7 +103,6 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
     }
   }
 
-  // Updated Time Picker for End Time using your method
   Future<void> _selectEndTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -259,7 +258,6 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- Profile Image ---
               Center(
                 child: GestureDetector(
                   onTap: _pickImage,
@@ -369,7 +367,6 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
               ),
               const SizedBox(height: 16),
 
-              // --- FIXED TIME PICKERS CALLING YOUR HELPER METHODS ---
               Row(
                 children: [
                   Expanded(
@@ -384,7 +381,7 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
                           ),
                           icon: const Icon(Icons.access_time),
                           label: Text(_startTime == null ? 'Select Start' : _startTime!.format(context)),
-                          onPressed: () => _selectStartTime(context), // 👈 Called your method here
+                          onPressed: () => _selectStartTime(context), 
                         ),
                       ],
                     ),
@@ -402,7 +399,7 @@ class _AddEditDoctorScreenState extends State<AddEditDoctorScreen> {
                           ),
                           icon: const Icon(Icons.access_time),
                           label: Text(_endTime == null ? 'Select End' : _endTime!.format(context)),
-                          onPressed: () => _selectEndTime(context), // 👈 Called your method here
+                          onPressed: () => _selectEndTime(context), 
                         ),
                       ],
                     ),

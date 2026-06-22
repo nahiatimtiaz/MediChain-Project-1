@@ -9,7 +9,7 @@ class PrescriptionModel {
   final DateTime? followUpDate;
   final DateTime? createdAt;
 
-  // Doctor name joined from doctors table
+
   final String? doctorName;
 
   PrescriptionModel({
@@ -25,7 +25,6 @@ class PrescriptionModel {
     this.doctorName,
   });
 
-  // Convert Supabase JSON to PrescriptionModel
   factory PrescriptionModel.fromJson(Map<String, dynamic> json) {
     return PrescriptionModel(
       id: json['id'],
@@ -45,7 +44,7 @@ class PrescriptionModel {
     );
   }
 
-  // Convert PrescriptionModel to JSON for Supabase
+
   Map<String, dynamic> toJson() {
     return {
       'doctor_id': doctorId,
